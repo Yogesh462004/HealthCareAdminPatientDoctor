@@ -8,20 +8,34 @@ import nimblix.in.HealthCareHub.request.PatientRegistrationRequest;
 import nimblix.in.HealthCareHub.response.PatientRegistrationResponse;
 import nimblix.in.HealthCareHub.response.PrescriptionMedicineResponse;
 import nimblix.in.HealthCareHub.response.PrescriptionResponse;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
 public interface PatientService {
-    PrescriptionResponse<Prescription> getPrescription(Long id);
-    PatientRegistrationResponse registerPatient(PatientRegistrationRequest request);
-    PrescriptionMedicineResponse<PrescriptionMedicines> getPrescriptionMedicines(Long prescription_id);
-    Patient savePatient(Patient patient);
-    String softDeletePatient(Long id);
-    Review addDoctorReview(Long patientId, Long doctorId, String comment, int rating);
-    List<Review> getDoctorReviews(Long doctorId);
-    Review addPatientReview(Long doctorId, Long patientId, String comment, int rating);
-    List<Review> getPatientReviews(Long patientId);
-}
 
+    // Patient Registration
+    PatientRegistrationResponse registerPatient(PatientRegistrationRequest request);
+
+    // Prescription APIs
+    PrescriptionResponse<Prescription> getPrescription(Long id);
+
+    PrescriptionMedicineResponse<PrescriptionMedicines> getPrescriptionMedicines(Long prescriptionId);
+
+    // Patient Management
+    Patient savePatient(Patient patient);
+
+    String softDeletePatient(Long id);
+
+    // Doctor Review APIs
+    Review addDoctorReview(Long patientId, Long doctorId, String comment, int rating);
+
+    List<Review> getDoctorReviews(Long doctorId);
+
+    // Patient Review by Doctor
+    Review addPatientReview(Long doctorId, Long patientId, String comment, int rating);
+
+    List<Review> getPatientReviews(Long patientId);
+
+    Review addHospitalReview(Long patientId, Long hospitalId, String comment, int rating);
+
+}

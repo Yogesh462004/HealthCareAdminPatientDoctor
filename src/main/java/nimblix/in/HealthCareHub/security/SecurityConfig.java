@@ -30,17 +30,26 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+
+
                                 "/auth/**",
-                                "/patients/**",
+                                "/api/auth/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
+                                "/patients/**",
                                 "/api/doctors/**",
                                 "/api/hospital/**",
-                                "/api/patient/**",
-                                "/api/auth/**",
                                 "/api/filter/**",
-                                "/api/dashboard/**"
+                                "/api/dashboard/**",
+                                "/api/patient/**",
+                                "/api/patient/*/doctors/*/review",
+                                "/api/patient/doctors/*/reviews",
+                                "/api/patient/*/hospitals/*/review",
+                                "/api/patient/hospitals/*/reviews",
+                                "/api/patient/*/review-by-doctor/*",
+                                "/api/patient/*/reviews"
+
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
@@ -52,11 +61,13 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration configuration) throws Exception {
+
         return configuration.getAuthenticationManager();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
+
         return new BCryptPasswordEncoder();
     }
 }

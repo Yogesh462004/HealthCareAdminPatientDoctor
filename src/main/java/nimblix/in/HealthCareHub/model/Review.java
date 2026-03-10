@@ -18,8 +18,10 @@ public class Review {
     private Long id;
 
     private Integer rating;
+
     private String comment;
 
+    // Patient who wrote the review
     @ManyToOne
     @JoinColumn(name = "patient_id")
     private Patient patient;
@@ -28,7 +30,12 @@ public class Review {
     @JoinColumn(name = "doctor_id")
     private Doctor doctor;
 
+    @ManyToOne
+    @JoinColumn(name = "hospital_id")
+    private Hospital hospital;
+
     private String createdTime;
+
     private String updatedTime;
 
     @PrePersist

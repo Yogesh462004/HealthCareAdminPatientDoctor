@@ -1,5 +1,6 @@
 package nimblix.in.HealthCareHub.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import nimblix.in.HealthCareHub.utility.HealthCareUtil;
@@ -43,6 +44,12 @@ public class Hospital {
     @Column(name="is_active")
     private Boolean isActive;
 
+    // Hospital Reviews
+    @OneToMany(mappedBy = "hospital", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Review> reviews;
+
+    // Hospital Rooms
     @ElementCollection
     @CollectionTable(
             name = "hospital_rooms",
@@ -56,7 +63,7 @@ public class Hospital {
     @Column(name = "updated_time")
     private String updatedTime;
 
-    //Mandatory:-we’re enforcing that the password field is mandatory for every hospital record
+    // Mandatory password
     @Column(nullable = false)
     private String password;
 
@@ -82,9 +89,5 @@ public class Hospital {
         private String roomNumber;
         private String roomType;
         private boolean available;
-
     }
 }
-
-
-

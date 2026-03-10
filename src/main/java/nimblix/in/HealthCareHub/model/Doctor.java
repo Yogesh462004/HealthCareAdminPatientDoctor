@@ -1,9 +1,12 @@
 package nimblix.in.HealthCareHub.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import nimblix.in.HealthCareHub.constants.HealthCareConstants;
 import nimblix.in.HealthCareHub.utility.HealthCareUtil;
+
+import java.util.List;
 
 @Entity
 @Table(name = "doctors")
@@ -33,29 +36,39 @@ public class Doctor {
     private String password;
 
     private String qualification;
+
     private Double consultationFee;
 
-    // ✅ Doctor login account
+    // ⭐ Doctor Average Rating
+    @Column(name = "average_rating")
+    private Double averageRating = 0.0;
+
+    // Doctor Login Account
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;
 
-    // ✅ Many Doctors → One Hospital
+    // Many Doctors → One Hospital
     @ManyToOne
     @JoinColumn(name = "hospital_id", nullable = false)
     private Hospital hospital;
 
     @Column(name = "is_active")
-    private  String isActive;
+    private String isActive;
 
-    // ✅ Many Doctors → One Specialization
+    // Many Doctors → One Specialization
     @ManyToOne
     @JoinColumn(name = "specialization_id", nullable = false)
     private Specialization specialization;
 
-    //  Real-time status — uses HealthCareConstants (AVAILABLE, IN_OPERATION, ON_BREAK ...)
+    // ⭐ Doctor Status (AVAILABLE / BUSY / ON_BREAK)
     @Column(name = "doctor_status", nullable = false)
     private String doctorStatus = HealthCareConstants.DOCTOR_STATUS_AVAILABLE;
+
+    // ⭐ Doctor Reviews
+    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Review> reviews;
 
     private String createdTime;
     private String updatedTime;
@@ -64,6 +77,7 @@ public class Doctor {
     protected void onCreate(){
         createdTime = HealthCareUtil.changeCurrentTimeToLocalDateFromGmtToISTInString();
         updatedTime = createdTime;
+
         if (doctorStatus == null) {
             doctorStatus = HealthCareConstants.DOCTOR_STATUS_AVAILABLE;
         }
