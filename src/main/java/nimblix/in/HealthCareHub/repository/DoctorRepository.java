@@ -18,6 +18,8 @@ public interface DoctorRepository extends JpaRepository<Doctor,Long> {
     Optional<Doctor> findByEmailId(String emailId);
     Optional<Doctor> findByIdAndHospitalId(Long doctorId, Long hospitalId);
 
+
+
     @Query("""
             SELECT new nimblix.in.HealthCareHub.response.DoctorProfileResponse(
                 d.id,
@@ -43,7 +45,8 @@ public interface DoctorRepository extends JpaRepository<Doctor,Long> {
             WHERE d.id = :doctorId
             """)
     Optional<DoctorProfileResponse> findDoctorProfileById(@Param("doctorId") Long doctorId);
-    List<Doctor> findByNameContainingIgnoreCase(String name);
+    @Query("SELECT d FROM Doctor d WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', :name, '%'))")
+    List<Doctor> searchDoctorByName(@Param("name") String name);
     List<Doctor> findDoctorsByHospitalId(@Param("hospitalId") Long hospitalId);
     List<Doctor> findBySpecialization_NameIgnoreCase(String name);
 
