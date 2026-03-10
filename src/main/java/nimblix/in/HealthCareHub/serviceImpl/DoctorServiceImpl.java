@@ -296,12 +296,12 @@ public class DoctorServiceImpl implements DoctorService {
         List<DoctorAvailability> slots = doctorRepository.findAvailabilityByDoctorId(doctorId);
         return slots.stream().map(slot -> {
             Map<String, Object> map = new LinkedHashMap<>();
-            map.put("doctorId",      slot.getDoctor().getId());
-            map.put("name",          slot.getDoctor().getName());
-            map.put("availableNow",  slot.isAvailable());
+            map.put("doctorId", slot.getDoctor().getId());
+            map.put("name", slot.getDoctor().getName());
+            map.put("availableNow", slot.isAvailable());
             map.put("availableDate", slot.getAvailableDate());
-            map.put("startTime",     slot.getStartTime());
-            map.put("endTime",       slot.getEndTime());
+            map.put("startTime", slot.getStartTime());
+            map.put("endTime", slot.getEndTime());
             return map;
         }).collect(Collectors.toList());
     }
@@ -397,12 +397,12 @@ public class DoctorServiceImpl implements DoctorService {
 
     private String resolveStatusLabel(String status) {
         return switch (status) {
-            case HealthCareConstants.DOCTOR_STATUS_AVAILABLE    -> " Available";
+            case HealthCareConstants.DOCTOR_STATUS_AVAILABLE -> " Available";
             case HealthCareConstants.DOCTOR_STATUS_IN_OPERATION -> " In Operation";
-            case HealthCareConstants.DOCTOR_STATUS_ON_BREAK     -> " On Break";
-            case HealthCareConstants.DOCTOR_STATUS_ON_LEAVE     -> " On Leave";
-            case HealthCareConstants.DOCTOR_STATUS_BUSY         -> " Busy with Patient";
-            case HealthCareConstants.DOCTOR_STATUS_OFF_DUTY     -> " Off Duty";
+            case HealthCareConstants.DOCTOR_STATUS_ON_BREAK -> " On Break";
+            case HealthCareConstants.DOCTOR_STATUS_ON_LEAVE -> " On Leave";
+            case HealthCareConstants.DOCTOR_STATUS_BUSY -> " Busy with Patient";
+            case HealthCareConstants.DOCTOR_STATUS_OFF_DUTY -> " Off Duty";
             default -> " NOt Available";
         };
     }
@@ -412,7 +412,7 @@ public class DoctorServiceImpl implements DoctorService {
 
         Doctor doctor = doctorRepository.findById(doctorId)
                 .orElseThrow(() ->
-                        new DoctorNotFoundException(HealthCareConstants.DOCTORNOTFOUND+ " " + doctorId));
+                        new DoctorNotFoundException(HealthCareConstants.DOCTORNOTFOUND + " " + doctorId));
 
         Patient patient = patientRepository.findById(request.getPatientId())
                 .orElseThrow(() ->
@@ -435,6 +435,7 @@ public class DoctorServiceImpl implements DoctorService {
                 .orElseThrow(() ->
                         new RuntimeException("Schedule creation failed"));
     }
+
     @Override
     public List<DoctorScheduleResponse> getDoctorSchedules(Long doctorId) {
 
@@ -446,13 +447,14 @@ public class DoctorServiceImpl implements DoctorService {
 
         return doctorScheduleRepository.findSchedulesByDoctorId(doctorId);
     }
+
     @Override
     public DoctorScheduleResponse updateDoctorScheduleStatus(Long scheduleId, String status) {
 
         DoctorSchedule schedule = doctorScheduleRepository.findById(scheduleId)
                 .orElseThrow(() ->
                         new DoctorNotFoundException("Doctor Schedule not found with id: " + scheduleId));
-        if(!status.equalsIgnoreCase(HealthCareConstants.SCHEDULED) &&
+        if (!status.equalsIgnoreCase(HealthCareConstants.SCHEDULED) &&
                 !status.equalsIgnoreCase(HealthCareConstants.ONGOING) &&
                 !status.equalsIgnoreCase(HealthCareConstants.COMPLETED) &&
                 !status.equalsIgnoreCase(HealthCareConstants.FAILED)) {
@@ -472,4 +474,35 @@ public class DoctorServiceImpl implements DoctorService {
                         new UserNotFoundException("Schedule update failed"));
     }
 
+    @Override
+    public Object updateDoctor(Long doctorId, Map<String, Object> updates) {
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Doctor not found with ID: " + doctorId));
+
+        if (updates.containsKey("name")) {
+            doctor.setName((String) updates.get("name"));
+        }
+        if (updates.containsKey("phone")) {
+            doctor.setPhone((String) updates.get("phone"));
+        }
+        if (updates.containsKey("qualification")) {
+            doctor.setQualification((String) updates.get("qualification"));
+        }
+        if (updates.containsKey("experienceYears")) {
+            doctor.setExperienceYears(
+                    Long.valueOf(updates.get("experienceYears").toString()));
+        }
+        if (updates.containsKey("description")) {
+            doctor.setDescription((String) updates.get("description"));
+        }
+        if (updates.containsKey("consultationFee")) {
+            doctor.setConsultationFee(
+                    Double.valueOf(updates.get("consultationFee").toString()));
+        }
+
+        return doctorRepository.save(doctor);
+
+
+    }
 }

@@ -32,4 +32,6 @@ public interface DoctorService {
     DoctorScheduleResponse createDoctorSchedule(Long doctorId, DoctorScheduleRequest request);
     List<DoctorScheduleResponse> getDoctorSchedules(Long doctorId);
     DoctorScheduleResponse updateDoctorScheduleStatus(Long scheduleId, String status);
+    Object updateDoctor(Long doctorId, Map<String,Object>updates);
+
 }

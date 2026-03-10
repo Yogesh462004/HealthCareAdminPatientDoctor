@@ -117,7 +117,7 @@ public class DoctorController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<?> searchDoctor(@RequestParam String name){
+    public ResponseEntity<?> searchDoctor(@RequestParam String name) {
         return ResponseEntity.ok(doctorService.searchDoctorByName(name));
     }
 
@@ -221,7 +221,7 @@ public class DoctorController {
     }
 
     @PostMapping("/{doctorId}/schedule")
-    public ResponseEntity<Map<String,Object>> createSchedule(
+    public ResponseEntity<Map<String, Object>> createSchedule(
             @PathVariable Long doctorId,
             @RequestBody DoctorScheduleRequest request) {
         if (doctorId <= 0) {
@@ -233,7 +233,7 @@ public class DoctorController {
 
         DoctorScheduleResponse response = doctorService.createDoctorSchedule(doctorId, request);
 
-        Map<String,Object> result = new LinkedHashMap<>();
+        Map<String, Object> result = new LinkedHashMap<>();
         result.put(HealthCareConstants.STATUS, HttpStatus.OK.value());
         result.put(HealthCareConstants.MESSAGE, HealthCareConstants.DOCTORSCHEDULESUCCESSFULLY);
         result.put(HealthCareConstants.DATA, response);
@@ -241,7 +241,7 @@ public class DoctorController {
     }
 
     @GetMapping("/{doctorId}/schedule")
-    public ResponseEntity<Map<String,Object>> getSchedules(@PathVariable Long doctorId) {
+    public ResponseEntity<Map<String, Object>> getSchedules(@PathVariable Long doctorId) {
         if (doctorId <= 0) {
             throw new IllegalArgumentException("Doctor id cannot be 0 or negative");
         }
@@ -249,7 +249,7 @@ public class DoctorController {
         List<DoctorScheduleResponse> schedules =
                 doctorService.getDoctorSchedules(doctorId);
 
-        Map<String,Object> result = new LinkedHashMap<>();
+        Map<String, Object> result = new LinkedHashMap<>();
         result.put(HealthCareConstants.STATUS, HttpStatus.OK.value());
         result.put(HealthCareConstants.MESSAGE, HealthCareConstants.DOCTORSCHEDULESUCCESSFULLY);
         result.put(HealthCareConstants.DATA, schedules);
@@ -258,7 +258,7 @@ public class DoctorController {
     }
 
     @PutMapping("/schedule/{scheduleId}/status")
-    public ResponseEntity<Map<String,Object>> updateScheduleStatus(
+    public ResponseEntity<Map<String, Object>> updateScheduleStatus(
             @PathVariable Long scheduleId,
             @RequestParam String status) {
         if (scheduleId <= 0) {
@@ -267,11 +267,33 @@ public class DoctorController {
 
         DoctorScheduleResponse response = doctorService.updateDoctorScheduleStatus(scheduleId, status);
 
-        Map<String,Object> result = new LinkedHashMap<>();
+        Map<String, Object> result = new LinkedHashMap<>();
         result.put(HealthCareConstants.STATUS, HttpStatus.OK.value());
         result.put(HealthCareConstants.MESSAGE, HealthCareConstants.SCHEDULESTATUSUPDATED);
         result.put(HealthCareConstants.DATA, response);
         return ResponseEntity.ok(result);
     }
 
+    @PatchMapping("/{doctorId}")
+    public ResponseEntity<?> updateDoctor(
+            @PathVariable Long doctorId,
+
+            @RequestBody Map<String, Object> updates) {
+        if (doctorId <= 0) {
+            Map<String, Object> error = new LinkedHashMap<>();
+            error.put("status", HttpStatus.BAD_REQUEST.value());
+            error.put("message", "Doctor ID must be a positive number");
+            return ResponseEntity.badRequest().body(error);
+
+        }
+        Object updatedDoctor = doctorService.updateDoctor(doctorId, updates);
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put(HealthCareConstants.STATUS, HttpStatus.OK.value());
+        result.put(HealthCareConstants.MESSAGE, HealthCareConstants.DOCTOR_PROFILE_FETCHED_SUCCESSFULLY);
+        result.put(HealthCareConstants.DATA, updatedDoctor);
+
+        return ResponseEntity.ok(result);
+
+
+    }
 }
