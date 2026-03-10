@@ -31,5 +31,6 @@ public interface PatientService {
     ApiResponse forgotPassword(String phoneNumber, String email);
 
     ApiResponse resetPassword(String phoneNumber, String email, String newPassword);
+    void updatePatient(Long patientId, PatientRegistrationRequest request);
 }
 

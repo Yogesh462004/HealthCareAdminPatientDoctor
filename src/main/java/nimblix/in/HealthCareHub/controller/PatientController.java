@@ -179,6 +179,26 @@ public class PatientController {
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
     }
+    @PutMapping("/update/{patientId}")
+    public ResponseEntity<Map<String, Object>> updatePatient(
+            @PathVariable Long patientId,
+            @RequestBody PatientRegistrationRequest request) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            patientService.updatePatient(patientId, request);
+            response.put("status", "SUCCESS");
+            response.put("message", "Patient updated successfully");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            response.put("status", "FAILURE");
+            response.put("message", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+    }
+
 
 
 }

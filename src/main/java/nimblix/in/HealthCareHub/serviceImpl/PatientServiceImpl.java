@@ -277,4 +277,16 @@ public class PatientServiceImpl implements PatientService {
 
         return response;
     }
+    @Override
+    public void updatePatient(Long patientId, PatientRegistrationRequest request) {
+
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new RuntimeException("Patient not found"));
+
+        patient.setName(request.getFirstName() + " " + request.getLastName());
+        patient.setGender(request.getGender());
+
+        patientRepository.save(patient);
+    }
+
 }
