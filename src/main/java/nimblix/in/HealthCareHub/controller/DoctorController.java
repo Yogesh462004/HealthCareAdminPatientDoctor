@@ -79,16 +79,33 @@ public class DoctorController {
 
     //  - Get Doctor by ID with edge cases
     @GetMapping("/{doctorId}")
-    public ResponseEntity<Map<String, Object>> getDoctorById(@PathVariable Long doctorId) {
+    public ResponseEntity<ApiResponse<Doctor>> getDoctorById(@PathVariable Long doctorId) {
 
-        DoctorProfileResponse doctor = doctorService.getDoctorById(doctorId);
+        ApiResponse<Doctor> response = new ApiResponse<>();
 
-        Map<String, Object> result = new LinkedHashMap<>();
-        result.put(HealthCareConstants.STATUS, HttpStatus.OK.value());
-        result.put(HealthCareConstants.MESSAGE, HealthCareConstants.DOCTOR_FETCHED_SUCCESSFULLY);
-        result.put(HealthCareConstants.DATA_KEY, doctor);
+        if (doctorId <= 0) {
+            response.setStatus("FAILURE");
+            response.setMessage("Doctor id cannot be 0 or negative");
+            response.setData(null);
 
-        return ResponseEntity.ok(result);
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        Doctor doctor = doctorService.getDoctorById(doctorId);
+
+        if (doctor == null) {
+            response.setStatus("FAILURE");
+            response.setMessage("Doctor not found");
+            response.setData(null);
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        response.setStatus("SUCCESS");
+        response.setMessage("Doctor fetched successfully");
+        response.setData(doctor);
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{doctorId}/reviews")
