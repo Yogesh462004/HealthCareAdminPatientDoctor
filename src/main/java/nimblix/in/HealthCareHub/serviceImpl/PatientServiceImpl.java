@@ -2,69 +2,75 @@ package nimblix.in.HealthCareHub.serviceImpl;
 
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
-import nimblix.in.HealthCareHub.constants.HealthCareConstants;
-import nimblix.in.HealthCareHub.model.*;
-import nimblix.in.HealthCareHub.repository.*;
+import nimblix.in.HealthCareHub.model.Hospital;
+import nimblix.in.HealthCareHub.model.Patient;
+import nimblix.in.HealthCareHub.model.Role;
+import nimblix.in.HealthCareHub.model.User;
+import nimblix.in.HealthCareHub.repository.HospitalRepository;
+import nimblix.in.HealthCareHub.repository.UserRepository;
 import nimblix.in.HealthCareHub.request.PatientRegistrationRequest;
-import nimblix.in.HealthCareHub.response.PatientRegistrationResponse;
-import nimblix.in.HealthCareHub.response.PrescriptionMedicineResponse;
-import nimblix.in.HealthCareHub.response.PrescriptionResponse;
 import nimblix.in.HealthCareHub.service.PatientService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDate;
 
 @Service
 public class PatientServiceImpl implements PatientService {
 
     @Autowired
-    private PrescriptionRepository prescriptionRepository;
-
-    @Autowired
-    private PrescriptionMedicineRepository prescriptionMedicinesRepository;
-
-    @Autowired
-    private PatientRepository patientRepository;
-
-    @Autowired
     private UserRepository userRepository;
 
     @Autowired
-    private DoctorRepository doctorRepository;
+    private HospitalRepository hospitalRepository;
 
     @Autowired
     private EntityManager entityManager;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Override
     @Transactional
-    public PatientRegistrationResponse registerPatient(PatientRegistrationRequest request) {
-        // Check if email exists
+    public Patient registerPatient(PatientRegistrationRequest request) {
+
+        // 1. Check email
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            return new PatientRegistrationResponse(false, "Email already exists");
+            throw new IllegalArgumentException("Email already exists");
         }
 
-        // Check password match
+        // 2. Check password match
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            return new PatientRegistrationResponse(false, "Password and Confirm Password do not match");
+            throw new IllegalArgumentException("Password and Confirm Password do not match");
         }
 
-        // Create User
+        // 3. Create User
         User user = new User();
         user.setEmail(request.getEmail());
-//        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(nimblix.in.HealthCareHub.model.Role.PATIENT);
-        user.setEnabled(true); // required for login
-
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(Role.PATIENT);
+        user.setEnabled(true);
         userRepository.save(user);
 
-        // Create Patient linked to User
-        Patient patient = new Patient();
-        patient.setName(request.getFirstName() + " " + request.getLastName());
-        patient.setGender(request.getGender());
-        patient.setUser(user);
+        // 4. Create Patient entity
+        Patient patient = Patient.builder()
+                .name(request.getFirstName() + " " + request.getLastName())
+                .age(request.getAge())
+                .gender(request.getGender())
+                .phone(request.getPhone())
+                .disease(request.getDisease())
+                .admissionDate(request.getAdmissionDate() != null ? LocalDate.parse(request.getAdmissionDate()) : null)
+                .dischargeDate(request.getDischargeDate() != null ? LocalDate.parse(request.getDischargeDate()) : null)
+                .surgeryRequired(request.getSurgeryRequired())
+                .emergencyCase(request.getEmergencyCase())
+                .user(user)
+                .hospital(request.getHospitalId() != null
+                        ? hospitalRepository.findById(request.getHospitalId())
+                        .orElseThrow(() -> new RuntimeException("Hospital not found"))
+                        : null)
+                .build();
 
         entityManager.persist(patient);
         return new PatientRegistrationResponse(true, "Registration successful");
@@ -96,19 +102,35 @@ public class PatientServiceImpl implements PatientService {
         }
     }
 
-    public String softDeletePatient(Long id) {
-        Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+//    @Override
+//    public String softDeletePatient(Long id) {
+//        Patient patient = patientRepository.findById(id)
+//                .orElseThrow(() -> new RuntimeException("Patient not found"));
+//
+////        patient.setDeleted();   //  Mark as deleted
+//        patientRepository.save(patient);
+//
+//        return "Patient soft deleted successfully";
+//    }
 
-//        patient.setDeleted();   //  Mark as deleted
+public boolean softDeletePatient(Long id) {
+
+    Optional<Patient> optionalPatient = patientRepository.findById(id);
+
+    if(optionalPatient.isPresent()) {
+
+        Patient patient = optionalPatient.get();
+        patient.setDeleted(true);
         patientRepository.save(patient);
 
-        return "Patient soft deleted successfully";
-    }
+        return true;
 
-    public Patient savePatient(Patient patient) {
-        // TODO Auto-generated method stub
-        return patientRepository.save(patient);
+    } else {
+        return false;
+    }
+}
+
+        return patient;
     }
 
     @Override
@@ -180,5 +202,7 @@ public class PatientServiceImpl implements PatientService {
 //        return patient.getReviews();
         return null;
     }
+
+
 
 }

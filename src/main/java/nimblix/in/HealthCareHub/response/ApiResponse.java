@@ -2,10 +2,11 @@ package nimblix.in.HealthCareHub.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
 @Data
-@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 public class ApiResponse<T> {
@@ -13,5 +14,6 @@ public class ApiResponse<T> {
     private String status;
     private String message;
     private T data;
+   // private String timestamp = LocalDateTime.now().toString();
 
 }

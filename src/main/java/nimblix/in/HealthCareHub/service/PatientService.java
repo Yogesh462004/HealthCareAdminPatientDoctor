@@ -18,10 +18,15 @@ public interface PatientService {
     PatientRegistrationResponse registerPatient(PatientRegistrationRequest request);
     PrescriptionMedicineResponse<PrescriptionMedicines> getPrescriptionMedicines(Long prescription_id);
     Patient savePatient(Patient patient);
-    String softDeletePatient(Long id);
+   // String softDeletePatient(Long id);
     Review addDoctorReview(Long patientId, Long doctorId, String comment, int rating);
     List<Review> getDoctorReviews(Long doctorId);
     Review addPatientReview(Long doctorId, Long patientId, String comment, int rating);
     List<Review> getPatientReviews(Long patientId);
+    boolean softDeletePatient(Long id);
+
+
+
+
 }
 
