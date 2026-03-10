@@ -2,39 +2,30 @@ package nimblix.in.HealthCareHub.serviceImpl;
 
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
-import nimblix.in.HealthCareHub.constants.HealthCareConstants;
-import nimblix.in.HealthCareHub.model.*;
-import nimblix.in.HealthCareHub.repository.*;
+import nimblix.in.HealthCareHub.model.Hospital;
+import nimblix.in.HealthCareHub.model.Patient;
+import nimblix.in.HealthCareHub.model.Role;
+import nimblix.in.HealthCareHub.model.User;
+import nimblix.in.HealthCareHub.repository.HospitalRepository;
+import nimblix.in.HealthCareHub.repository.UserRepository;
 import nimblix.in.HealthCareHub.request.PatientRegistrationRequest;
-import nimblix.in.HealthCareHub.response.PatientRegistrationResponse;
-import nimblix.in.HealthCareHub.response.PrescriptionMedicineResponse;
-import nimblix.in.HealthCareHub.response.PrescriptionResponse;
 import nimblix.in.HealthCareHub.service.PatientService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDate;
 
 @Service
 public class PatientServiceImpl implements PatientService {
 
     @Autowired
-    private PrescriptionRepository prescriptionRepository;
-
-    @Autowired
-    private PrescriptionMedicineRepository prescriptionMedicinesRepository;
-
-    @Autowired
-    private PatientRepository patientRepository;
-
-    @Autowired
     private UserRepository userRepository;
 
     @Autowired
-    private DoctorRepository doctorRepository;
+    private HospitalRepository hospitalRepository;
 
     @Autowired
     private HospitalRepository hospitalRepository;
@@ -42,20 +33,28 @@ public class PatientServiceImpl implements PatientService {
     @Autowired
     private EntityManager entityManager;
 
-    // ==============================
-    // Patient Registration
-    // ==============================
-
     @Override
     @Transactional
     public PatientRegistrationResponse registerPatient(PatientRegistrationRequest request) {
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Override
+    @Transactional
+    public Patient registerPatient(PatientRegistrationRequest request) {
+
+        // 1. Check email
+
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            return new PatientRegistrationResponse(false, "Email already exists");
+            throw new IllegalArgumentException("Email already exists");
         }
 
+
+
+        // 2. Check password match
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            return new PatientRegistrationResponse(false, "Password and Confirm Password do not match");
+            throw new IllegalArgumentException("Password and Confirm Password do not match");
         }
 
         User user = new User();
@@ -70,14 +69,37 @@ public class PatientServiceImpl implements PatientService {
         patient.setGender(request.getGender());
         patient.setUser(user);
 
+        // 3. Create User
+        User user = new User();
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(Role.PATIENT);
+        user.setEnabled(true);
+        userRepository.save(user);
+
+        // 4. Create Patient entity
+        Patient patient = Patient.builder()
+                .name(request.getFirstName() + " " + request.getLastName())
+                .age(request.getAge())
+                .gender(request.getGender())
+                .phone(request.getPhone())
+                .disease(request.getDisease())
+                .admissionDate(request.getAdmissionDate() != null ? LocalDate.parse(request.getAdmissionDate()) : null)
+                .dischargeDate(request.getDischargeDate() != null ? LocalDate.parse(request.getDischargeDate()) : null)
+                .surgeryRequired(request.getSurgeryRequired())
+                .emergencyCase(request.getEmergencyCase())
+                .user(user)
+                .hospital(request.getHospitalId() != null
+                        ? hospitalRepository.findById(request.getHospitalId())
+                        .orElseThrow(() -> new RuntimeException("Hospital not found"))
+                        : null)
+                .build();
+
+
         entityManager.persist(patient);
 
         return new PatientRegistrationResponse(true, "Registration successful");
     }
-
-    // ==============================
-    // Prescription APIs
-    // ==============================
 
     @Override
     public PrescriptionResponse<Prescription> getPrescription(Long id) {
@@ -116,10 +138,6 @@ public class PatientServiceImpl implements PatientService {
         }
     }
 
-    // ==============================
-    // Patient Management
-    // ==============================
-
     @Override
     public Patient savePatient(Patient patient) {
         return patientRepository.save(patient);
@@ -133,14 +151,37 @@ public class PatientServiceImpl implements PatientService {
 
         patient.setIsDeleted(true);
 
+
+//    @Override
+//    public String softDeletePatient(Long id) {
+//        Patient patient = patientRepository.findById(id)
+//                .orElseThrow(() -> new RuntimeException("Patient not found"));
+//
+////        patient.setDeleted();   //  Mark as deleted
+//        patientRepository.save(patient);
+//
+//        return "Patient soft deleted successfully";
+//    }
+
+public boolean softDeletePatient(Long id) {
+
+    Optional<Patient> optionalPatient = patientRepository.findById(id);
+
+    if(optionalPatient.isPresent()) {
+
+        Patient patient = optionalPatient.get();
+        patient.setDeleted(true);
+
         patientRepository.save(patient);
 
-        return "Patient soft deleted successfully";
-    }
+        return true;
 
-    // ==============================
-    // Doctor Review
-    // ==============================
+    } else {
+        return false;
+    }
+}
+        return patient;
+    }
 
     @Override
     public Review addDoctorReview(Long patientId, Long doctorId, String comment, int rating) {
@@ -182,10 +223,6 @@ public class PatientServiceImpl implements PatientService {
         return doctor.getReviews();
     }
 
-    // ==============================
-    // Hospital Review
-    // ==============================
-
     @Override
     public Review addHospitalReview(Long patientId, Long hospitalId, String comment, int rating) {
 
@@ -212,10 +249,6 @@ public class PatientServiceImpl implements PatientService {
 
         return review;
     }
-
-    // ==============================
-    // Patient Review by Doctor
-    // ==============================
 
     @Override
     public Review addPatientReview(Long doctorId, Long patientId, String comment, int rating) {
@@ -247,6 +280,7 @@ public class PatientServiceImpl implements PatientService {
     @Override
     public List<Review> getPatientReviews(Long patientId) {
 
+
         Patient patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new RuntimeException("Patient not found"));
 
@@ -256,4 +290,22 @@ public class PatientServiceImpl implements PatientService {
 
         return patient.getReviews();
     }
+
+    @Override
+    public List<Patient> filterPatientsByDay(int day) {
+        return patientRepository.findPatientsByDay(day);
+    }
+
+    @Override
+    public List<Patient> filterPatientsByMonth(int month) {
+        return patientRepository.findPatientsByMonth(month);
+    }
+
+    @Override
+    public List<Patient> filterPatientsByYear(int year) {
+        return patientRepository.findPatientsByYear(year);
+    }
+
+
+
 }

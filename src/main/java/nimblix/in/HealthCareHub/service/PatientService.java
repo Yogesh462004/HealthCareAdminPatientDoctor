@@ -24,9 +24,13 @@ public interface PatientService {
     // Patient Management
     Patient savePatient(Patient patient);
 
+
     String softDeletePatient(Long id);
 
     // Doctor Review APIs
+
+   // String softDeletePatient(Long id);
+
     Review addDoctorReview(Long patientId, Long doctorId, String comment, int rating);
 
     List<Review> getDoctorReviews(Long doctorId);
@@ -35,6 +39,12 @@ public interface PatientService {
     Review addPatientReview(Long doctorId, Long patientId, String comment, int rating);
 
     List<Review> getPatientReviews(Long patientId);
+
+    List<Patient> filterPatientsByDay(int day);
+    List<Patient> filterPatientsByMonth(int month);
+    List<Patient> filterPatientsByYear(int year);
+}
+
 
     Review addHospitalReview(Long patientId, Long hospitalId, String comment, int rating);
 

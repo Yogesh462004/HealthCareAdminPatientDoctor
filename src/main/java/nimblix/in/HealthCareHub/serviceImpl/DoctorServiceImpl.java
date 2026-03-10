@@ -15,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -201,7 +203,12 @@ public class DoctorServiceImpl implements DoctorService {
 
     @Override
     public List<Doctor> searchDoctorByName(String name) {
-        return doctorRepository.findByNameContainingIgnoreCase(name);
+
+        if (name == null) {
+            return List.of();
+        }
+System.out.println(doctorRepository.searchDoctorByName(name));
+        return doctorRepository.searchDoctorByName(name);
     }
 
     @Override
@@ -407,34 +414,109 @@ public class DoctorServiceImpl implements DoctorService {
         };
     }
 
-    @Override
-    public DoctorScheduleResponse createDoctorSchedule(Long doctorId, DoctorScheduleRequest request) {
+//    @Override
+//    public DoctorScheduleResponse createDoctorSchedule(Long doctorId, DoctorScheduleRequest request) {
+//        if (request.getOperationName() == null || request.getOperationName().trim().isEmpty()) {
+//            throw new IllegalArgumentException("Operation name cannot be null or empty");
+//        }
+//
+//        if (request.getOperationDate() == null || request.getOperationDate().trim().isEmpty()) {
+//            throw new IllegalArgumentException("Operation date cannot be null or empty");
+//        }
+//        try {
+//            LocalDate.parse(request.getOperationDate());
+//        } catch (DateTimeParseException e) {
+//            throw new IllegalArgumentException("Invalid date format. Use yyyy-MM-dd");
+//        }
+//
+//        Doctor doctor = doctorRepository.findById(doctorId)
+//                .orElseThrow(() ->
+//                        new DoctorNotFoundException(HealthCareConstants.DOCTORNOTFOUND+ " " + doctorId));
+//
+//        Patient patient = patientRepository.findById(request.getPatientId())
+//                .orElseThrow(() ->
+//                        new DoctorNotFoundException(HealthCareConstants.PATIENTNOTFOUND + request.getPatientId()));
+//
+//        DoctorSchedule schedule = new DoctorSchedule();
+//
+//        schedule.setDoctor(doctor);
+//        schedule.setPatient(patient);
+//        schedule.setOperationName(request.getOperationName());
+//        schedule.setOperationDate(request.getOperationDate());
+//        schedule.setStatus(HealthCareConstants.SCHEDULED);
+//        boolean exists = doctorScheduleRepository.existsByDoctor_IdAndPatient_IdAndOperationDate(
+//                        doctorId,
+//                        request.getPatientId(),
+//                        request.getOperationDate());
+//
+//        if (exists) {
+//            throw new IllegalArgumentException("Schedule already exists for this doctor, patient and date");
+//        }
+//
+//        doctorScheduleRepository.save(schedule);
+//
+//        return doctorScheduleRepository.findSchedulesByDoctorId(doctorId)
+//                .stream()
+//                .filter(s -> s.getScheduleId().equals(schedule.getId()))
+//                .findFirst()
+//                .orElseThrow(() ->
+//                        new RuntimeException("Schedule creation failed"));
+//    }
+@Override
+public DoctorScheduleResponse createDoctorSchedule(Long doctorId, DoctorScheduleRequest request) {
 
-        Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() ->
-                        new DoctorNotFoundException(HealthCareConstants.DOCTORNOTFOUND+ " " + doctorId));
-
-        Patient patient = patientRepository.findById(request.getPatientId())
-                .orElseThrow(() ->
-                        new DoctorNotFoundException(HealthCareConstants.PATIENTNOTFOUND + request.getPatientId()));
-
-        DoctorSchedule schedule = new DoctorSchedule();
-
-        schedule.setDoctor(doctor);
-        schedule.setPatient(patient);
-        schedule.setOperationName(request.getOperationName());
-        schedule.setOperationDate(request.getOperationDate());
-        schedule.setStatus(HealthCareConstants.SCHEDULED);
-
-        doctorScheduleRepository.save(schedule);
-
-        return doctorScheduleRepository.findSchedulesByDoctorId(doctorId)
-                .stream()
-                .filter(s -> s.getScheduleId().equals(schedule.getId()))
-                .findFirst()
-                .orElseThrow(() ->
-                        new RuntimeException("Schedule creation failed"));
+    if (request.getOperationName() == null || request.getOperationName().trim().isEmpty()) {
+        return null;
     }
+
+    if (request.getOperationDate() == null || request.getOperationDate().trim().isEmpty()) {
+        return null;
+    }
+
+    try {
+        LocalDate.parse(request.getOperationDate());
+    } catch (DateTimeParseException e) {
+        return null;
+    }
+
+    Doctor doctor = doctorRepository.findById(doctorId).orElse(null);
+
+    if (doctor == null) {
+        return null;
+    }
+
+    Patient patient = patientRepository.findById(request.getPatientId()).orElse(null);
+
+    if (patient == null) {
+        return null;
+    }
+
+    boolean exists = doctorScheduleRepository
+            .existsByDoctor_IdAndPatient_IdAndOperationDate(
+                    doctorId,
+                    request.getPatientId(),
+                    request.getOperationDate());
+
+    if (exists) {
+        return null;
+    }
+
+    DoctorSchedule schedule = new DoctorSchedule();
+
+    schedule.setDoctor(doctor);
+    schedule.setPatient(patient);
+    schedule.setOperationName(request.getOperationName());
+    schedule.setOperationDate(request.getOperationDate());
+    schedule.setStatus("SCHEDULED");
+
+    doctorScheduleRepository.save(schedule);
+
+    return doctorScheduleRepository.findSchedulesByDoctorId(doctorId)
+            .stream()
+            .filter(s -> s.getScheduleId().equals(schedule.getId()))
+            .findFirst()
+            .orElse(null);
+}
     @Override
     public List<DoctorScheduleResponse> getDoctorSchedules(Long doctorId) {
 

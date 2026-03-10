@@ -43,6 +43,9 @@ public class Patient {
     @Column(name = "emergency_case")
     private Boolean emergencyCase;
 
+    @Column(name = "deleted")
+    private Boolean deleted = false;
+
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;
@@ -51,12 +54,14 @@ public class Patient {
     @JoinColumn(name = "hospital_id")
     private Hospital hospital;
 
+
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;
 
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Review> reviews;
+
 
     private String createdTime;
 

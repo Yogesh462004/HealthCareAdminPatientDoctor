@@ -2,15 +2,13 @@ package nimblix.in.HealthCareHub.controller;
 
 import lombok.RequiredArgsConstructor;
 import nimblix.in.HealthCareHub.constants.HealthCareConstants;
+import nimblix.in.HealthCareHub.model.Patient;
 import nimblix.in.HealthCareHub.model.Prescription;
 import nimblix.in.HealthCareHub.model.PrescriptionMedicines;
 import nimblix.in.HealthCareHub.model.Review;
 import nimblix.in.HealthCareHub.request.AdmitPatientRequest;
 import nimblix.in.HealthCareHub.request.PatientRegistrationRequest;
-import nimblix.in.HealthCareHub.response.AdmitPatientResponse;
-import nimblix.in.HealthCareHub.response.LabResultResponse;
-import nimblix.in.HealthCareHub.response.PrescriptionMedicineResponse;
-import nimblix.in.HealthCareHub.response.PrescriptionResponse;
+import nimblix.in.HealthCareHub.response.*;
 import nimblix.in.HealthCareHub.service.AdmissionService;
 import nimblix.in.HealthCareHub.service.LabResultService;
 import nimblix.in.HealthCareHub.service.PatientService;
@@ -21,16 +19,25 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+
 @RestController
-@RequestMapping("/api/patient")
-@RequiredArgsConstructor
+@RequestMapping("/api/patients")
 public class PatientController {
 
     private final AdmissionService admissionService;
     private final LabResultService labResultService;
     private final PatientService patientService;
 
-    // Register Patient
+    
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> registerPatient(
             @RequestBody PatientRegistrationRequest request) {
@@ -59,10 +66,15 @@ public class PatientController {
         }
     }
 
-    @GetMapping("/get/prescriptions/{id}")
-    public PrescriptionResponse<Prescription> getPrescription(@PathVariable Long id){
-        return patientService.getPrescription(id);
-    }
+
+    @Autowired
+    private PatientService patientService;
+
+    @PostMapping("/register")
+    public ApiResponse<Patient> registerPatient(@Valid @RequestBody PatientRegistrationRequest request) {
+
+        // Call service to create Patient
+        Patient savedPatient = patientService.registerPatient(request);
 
     // Get Prescription Medicines
     @GetMapping("/get/prescriptionmedicine/{prescriptionId}")
@@ -75,8 +87,15 @@ public class PatientController {
     @PostMapping("/admissions/admit")
     public ResponseEntity<Map<String, Object>> admitPatient(
             @RequestBody AdmitPatientRequest request) {
+      
+        // Return ApiResponse with patient data and message
+        return new ApiResponse<>("SUCCESS", "Patient registered successfully", savedPatient);
+    }
 
-        AdmitPatientResponse data = admissionService.admitPatient(request);
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<ApiResponse<Void>> deletePatient(@PathVariable Long id) {
+
+        boolean isDeleted = patientService.softDeletePatient(id);
 
         if (data == null) {
 
@@ -84,16 +103,16 @@ public class PatientController {
             error.put("status", HttpStatus.NOT_FOUND.value());
             error.put("message", "Patient or Doctor not found");
 
-            return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
-        }
+        ApiResponse<Void> response = new ApiResponse<>();
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", HttpStatus.CREATED.value());
-        response.put("message", "Patient admitted successfully");
-        response.put("data", data);
 
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
+        if (isDeleted) {
+
+            response.setStatus("SUCCESS");
+            response.setMessage("Patient deleted successfully");
+            response.setData(null);
+
+            return ResponseEntity.ok(response);
 
     // Get Lab Results
     @GetMapping("/lab-results/patient/{patientId}")
@@ -109,15 +128,16 @@ public class PatientController {
             error.put("message", "Patient not found with id: " + patientId);
 
             return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+
+        } else {
+
+            response.setStatus("FAILURE");
+            response.setMessage("Patient not found with id: " + id);
+            response.setData(null);
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+
         }
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", HttpStatus.OK.value());
-        response.put("message", "Lab results fetched successfully");
-        response.put("count", data.size());
-        response.put("data", data);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 
@@ -180,4 +200,34 @@ public class PatientController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @GetMapping("/filter")
+    public ResponseEntity<ApiResponse<List<Patient>>> filterPatients(
+            @RequestParam(required = false) Integer day,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer year) {
+
+        List<Patient> patients;
+
+        if (day != null) {
+            patients = patientService.filterPatientsByDay(day);
+        }
+        else if (month != null) {
+            patients = patientService.filterPatientsByMonth(month);
+        }
+        else if (year != null) {
+            patients = patientService.filterPatientsByYear(year);
+        }
+        else {
+            patients = List.of();
+        }
+
+        ApiResponse<List<Patient>> response =
+                new ApiResponse<>(
+                        "200",
+                        "Patient records fetched successfully",
+                        patients
+                );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }
