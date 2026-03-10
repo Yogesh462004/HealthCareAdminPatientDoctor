@@ -14,7 +14,19 @@ import java.util.List;
 
 @Service
 public interface PatientService {
-    Patient registerPatient(PatientRegistrationRequest request);
+    PrescriptionResponse<Prescription> getPrescription(Long id);
+    PatientRegistrationResponse registerPatient(PatientRegistrationRequest request);
+    PrescriptionMedicineResponse<PrescriptionMedicines> getPrescriptionMedicines(Long prescription_id);
+    Patient savePatient(Patient patient);
+   // String softDeletePatient(Long id);
+    Review addDoctorReview(Long patientId, Long doctorId, String comment, int rating);
+    List<Review> getDoctorReviews(Long doctorId);
+    Review addPatientReview(Long doctorId, Long patientId, String comment, int rating);
+    List<Review> getPatientReviews(Long patientId);
+    boolean softDeletePatient(Long id);
+
+
+
 
 }
 

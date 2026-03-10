@@ -37,6 +37,9 @@ public class Patient {
     @Column(name = "emergency_case")
     private Boolean emergencyCase;
 
+    @Column(name = "deleted")
+    private Boolean deleted = false;
+
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;
@@ -44,6 +47,7 @@ public class Patient {
     @ManyToOne
     @JoinColumn(name = "hospital_id")
     private Hospital hospital;
+
 
     private String createdTime;
     private String updatedTime;

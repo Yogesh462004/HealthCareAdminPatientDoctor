@@ -11,8 +11,9 @@ import nimblix.in.HealthCareHub.repository.UserRepository;
 import nimblix.in.HealthCareHub.request.PatientRegistrationRequest;
 import nimblix.in.HealthCareHub.service.PatientService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 
@@ -72,7 +73,136 @@ public class PatientServiceImpl implements PatientService {
                 .build();
 
         entityManager.persist(patient);
+        return new PatientRegistrationResponse(true, "Registration successful");
+    }
+
+    @Override
+    public PrescriptionResponse<Prescription> getPrescription(Long id) {
+        Optional<Prescription> op = prescriptionRepository.findById(id);
+        Prescription pr = op.get();
+        if (op.isPresent()) {
+            PrescriptionResponse<Prescription> response = new PrescriptionResponse<Prescription>(HealthCareConstants.STATUS_SUCCESS, HealthCareConstants.FETCHED_SUCCESSFULY, pr);
+            return response;
+        } else {
+            PrescriptionResponse<Prescription> response = new PrescriptionResponse<Prescription>(HealthCareConstants.STATUS_FAILURE, HealthCareConstants.FETCH_FAILED, null);
+            return response;
+        }
+    }
+
+    @Override
+    public PrescriptionMedicineResponse<PrescriptionMedicines> getPrescriptionMedicines(Long prescription_id) {
+        List<PrescriptionMedicines> prescriptions = prescriptionMedicinesRepository.findByPrescriptionId(prescription_id);
+
+        if (!prescriptions.isEmpty()) {
+            PrescriptionMedicineResponse<PrescriptionMedicines> response = new PrescriptionMedicineResponse<>(HealthCareConstants.STATUS_SUCCESS, HealthCareConstants.FETCHED_SUCCESSFULY, prescriptions);
+            return response;
+        } else {
+            PrescriptionMedicineResponse<PrescriptionMedicines> response = new PrescriptionMedicineResponse<>(HealthCareConstants.STATUS_FAILURE, HealthCareConstants.FETCH_FAILED, null);
+            return response;
+        }
+    }
+
+//    @Override
+//    public String softDeletePatient(Long id) {
+//        Patient patient = patientRepository.findById(id)
+//                .orElseThrow(() -> new RuntimeException("Patient not found"));
+//
+////        patient.setDeleted();   //  Mark as deleted
+//        patientRepository.save(patient);
+//
+//        return "Patient soft deleted successfully";
+//    }
+
+public boolean softDeletePatient(Long id) {
+
+    Optional<Patient> optionalPatient = patientRepository.findById(id);
+
+    if(optionalPatient.isPresent()) {
+
+        Patient patient = optionalPatient.get();
+        patient.setDeleted(true);
+        patientRepository.save(patient);
+
+        return true;
+
+    } else {
+        return false;
+    }
+}
 
         return patient;
     }
+
+    @Override
+    public Review addDoctorReview(Long patientId, Long doctorId, String comment, int rating) {
+//        Patient patient = patientRepository.findById(patientId)
+//                .orElseThrow(() -> new RuntimeException("Patient not found"));
+//        Doctor doctor = doctorRepository.findById(doctorId)
+//                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+//        Review review = Review.builder()
+//                .patient(patient)
+//                .doctor(doctor)
+//                .comment(comment)
+//                .rating(rating)
+//                .build();
+//        // Add review to doctor's review list
+//        if (doctor.getReviews() == null) {
+//            doctor.setReviews(new ArrayList<>());
+//        }
+//        doctor.getReviews().add(review);
+//        // Saving the doctor will also save the review due to cascade
+//        doctorRepository.save(doctor);
+//        return review;
+        return null;
+    }
+
+    @Override
+    public List<Review> getDoctorReviews(Long doctorId) {
+//        Doctor doctor = doctorRepository.findById(doctorId)
+//                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+//        if (doctor.getReviews() == null) {
+//            return new ArrayList<>();
+//        }
+//        return doctor.getReviews();
+        return null;
+    }
+
+    @Override
+    public Review addPatientReview(Long doctorId, Long patientId, String comment, int rating) {
+//        Doctor doctor = doctorRepository.findById(doctorId)
+//                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+//        Patient patient = patientRepository.findById(patientId)
+//                .orElseThrow(() -> new RuntimeException("Patient not found"));
+//        Review review = Review.builder()
+//                .doctor(doctor)
+//                .patient(patient)
+//                .comment(comment)
+//                .rating(rating)
+//                .build();
+//
+//        // Add review to patient's review list
+//        if (patient.getReviews() == null) {
+//            patient.setReviews(new ArrayList<>());
+//        }
+
+//        patient.getReviews().add(review);
+//        // Saving the patient will also save the review due to cascade
+//        patientRepository.save(patient);
+//        return review;
+        return null;
+    }
+
+    @Override
+    public List<Review> getPatientReviews(Long patientId) {
+//        Patient patient = patientRepository.findById(patientId)
+//                                .orElseThrow(() -> new RuntimeException("Patient not found"));
+//        if (patient.getReviews() == null) {
+//            return new ArrayList<>();
+//        }
+//        return patient.getReviews();
+        return null;
+    }
+
+
+
 }
