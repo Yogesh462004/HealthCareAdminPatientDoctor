@@ -1,5 +1,6 @@
 package nimblix.in.HealthCareHub.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import nimblix.in.HealthCareHub.constants.HealthCareConstants;
 import nimblix.in.HealthCareHub.model.Doctor;
@@ -78,16 +79,33 @@ public class DoctorController {
 
     //  - Get Doctor by ID with edge cases
     @GetMapping("/{doctorId}")
-    public ResponseEntity<Map<String, Object>> getDoctorById(@PathVariable Long doctorId) {
+    public ResponseEntity<ApiResponse<Doctor>> getDoctorById(@PathVariable Long doctorId) {
 
-        DoctorProfileResponse doctor = doctorService.getDoctorById(doctorId);
+        ApiResponse<Doctor> response = new ApiResponse<>();
 
-        Map<String, Object> result = new LinkedHashMap<>();
-        result.put(HealthCareConstants.STATUS, HttpStatus.OK.value());
-        result.put(HealthCareConstants.MESSAGE, HealthCareConstants.DOCTOR_FETCHED_SUCCESSFULLY);
-        result.put(HealthCareConstants.DATA_KEY, doctor);
+        if (doctorId <= 0) {
+            response.setStatus("FAILURE");
+            response.setMessage("Doctor id cannot be 0 or negative");
+            response.setData(null);
 
-        return ResponseEntity.ok(result);
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        Doctor doctor = doctorService.getDoctorById(doctorId);
+
+        if (doctor == null) {
+            response.setStatus("FAILURE");
+            response.setMessage("Doctor not found");
+            response.setData(null);
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        response.setStatus("SUCCESS");
+        response.setMessage("Doctor fetched successfully");
+        response.setData(doctor);
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{doctorId}/reviews")
@@ -236,58 +254,114 @@ public class DoctorController {
         return ResponseEntity.ok(result);
     }
 
+//    @PostMapping("/{doctorId}/schedule")
+//    public ResponseEntity<Map<String,Object>> createSchedule(
+//            @PathVariable Long doctorId,
+//            @RequestBody DoctorScheduleRequest request) {
+//        if (doctorId <= 0) {
+//            throw new IllegalArgumentException("Doctor id cannot be 0 or negative");
+//        }
+//        if (request.getPatientId() == null || request.getPatientId() <= 0) {
+//            throw new IllegalArgumentException("Patient id cannot be null, 0 or negative");
+//        }
+//
+//        DoctorScheduleResponse response = doctorService.createDoctorSchedule(doctorId, request);
+//
+//        Map<String,Object> result = new LinkedHashMap<>();
+//        result.put(HealthCareConstants.STATUS, HttpStatus.OK.value());
+//        result.put(HealthCareConstants.MESSAGE, HealthCareConstants.DOCTORSCHEDULESUCCESSFULLY);
+//        result.put(HealthCareConstants.DATA, response);
+//        return ResponseEntity.ok(result);
+//    }
+
+
     @PostMapping("/{doctorId}/schedule")
-    public ResponseEntity<Map<String,Object>> createSchedule(
+    public ResponseEntity<ApiResponse<DoctorScheduleResponse>> createDoctorSchedule(
             @PathVariable Long doctorId,
             @RequestBody DoctorScheduleRequest request) {
+
+        ApiResponse<DoctorScheduleResponse> response = new ApiResponse<>();
+
         if (doctorId <= 0) {
-            throw new IllegalArgumentException("Doctor id cannot be 0 or negative");
-        }
-        if (request.getPatientId() == null || request.getPatientId() <= 0) {
-            throw new IllegalArgumentException("Patient id cannot be null, 0 or negative");
+            response.setStatus("FAILURE");
+            response.setMessage("Doctor id cannot be 0 or negative");
+            response.setData(null);
+            return ResponseEntity.badRequest().body(response);
         }
 
-        DoctorScheduleResponse response = doctorService.createDoctorSchedule(doctorId, request);
+        DoctorScheduleResponse schedule = doctorService.createDoctorSchedule(doctorId, request);
 
-        Map<String,Object> result = new LinkedHashMap<>();
-        result.put(HealthCareConstants.STATUS, HttpStatus.OK.value());
-        result.put(HealthCareConstants.MESSAGE, HealthCareConstants.DOCTORSCHEDULESUCCESSFULLY);
-        result.put(HealthCareConstants.DATA, response);
-        return ResponseEntity.ok(result);
+        if (schedule == null) {
+            response.setStatus("FAILURE");
+            response.setMessage("Schedule could not be created");
+            response.setData(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        response.setStatus("SUCCESS");
+        response.setMessage("Doctor schedule created successfully");
+        response.setData(schedule);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/{doctorId}/schedule")
-    public ResponseEntity<Map<String,Object>> getSchedules(@PathVariable Long doctorId) {
+
+    @GetMapping("/{doctorId}/schedules")
+    public ResponseEntity<ApiResponse<List<DoctorScheduleResponse>>> getSchedules(@PathVariable Long doctorId) {
+
+        ApiResponse<List<DoctorScheduleResponse>> response = new ApiResponse<>();
+
         if (doctorId <= 0) {
-            throw new IllegalArgumentException("Doctor id cannot be 0 or negative");
+            response.setStatus("FAILURE");
+            response.setMessage("Doctor id cannot be 0 or negative");
+            response.setData(null);
+            return ResponseEntity.badRequest().body(response);
         }
 
-        List<DoctorScheduleResponse> schedules =
-                doctorService.getDoctorSchedules(doctorId);
+        List<DoctorScheduleResponse> schedules = doctorService.getDoctorSchedules(doctorId);
 
-        Map<String,Object> result = new LinkedHashMap<>();
-        result.put(HealthCareConstants.STATUS, HttpStatus.OK.value());
-        result.put(HealthCareConstants.MESSAGE, HealthCareConstants.DOCTORSCHEDULESUCCESSFULLY);
-        result.put(HealthCareConstants.DATA, schedules);
+        if (schedules == null || schedules.isEmpty()) {
+            response.setStatus("FAILURE");
+            response.setMessage("No schedules found");
+            response.setData(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
 
-        return ResponseEntity.ok(result);
+        response.setStatus("SUCCESS");
+        response.setMessage("Doctor schedules fetched successfully");
+        response.setData(schedules);
+
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/schedule/{scheduleId}/status")
-    public ResponseEntity<Map<String,Object>> updateScheduleStatus(
+    public ResponseEntity<ApiResponse<DoctorScheduleResponse>> updateScheduleStatus(
             @PathVariable Long scheduleId,
             @RequestParam String status) {
+
+        ApiResponse<DoctorScheduleResponse> response = new ApiResponse<>();
+
         if (scheduleId <= 0) {
-            throw new IllegalArgumentException("Schedule id cannot be 0 or negative");
+            response.setStatus("FAILURE");
+            response.setMessage("Schedule id cannot be 0 or negative");
+            response.setData(null);
+            return ResponseEntity.badRequest().body(response);
         }
 
-        DoctorScheduleResponse response = doctorService.updateDoctorScheduleStatus(scheduleId, status);
+        DoctorScheduleResponse schedule = doctorService.updateDoctorScheduleStatus(scheduleId, status);
 
-        Map<String,Object> result = new LinkedHashMap<>();
-        result.put(HealthCareConstants.STATUS, HttpStatus.OK.value());
-        result.put(HealthCareConstants.MESSAGE, HealthCareConstants.SCHEDULESTATUSUPDATED);
-        result.put(HealthCareConstants.DATA, response);
-        return ResponseEntity.ok(result);
+        if (schedule == null) {
+            response.setStatus("FAILURE");
+            response.setMessage("Schedule not found or update failed");
+            response.setData(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        response.setStatus("SUCCESS");
+        response.setMessage("Schedule status updated successfully");
+        response.setData(schedule);
+
+        return ResponseEntity.ok(response);
     }
 
 }
