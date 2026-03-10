@@ -7,6 +7,7 @@ public class PatientRegistrationRequest {
     private String email;
     private String password;
     private String confirmPassword;
+    private String phoneNumber;
 
     // Getters and Setters
     public String getFirstName() { return firstName; }
@@ -27,4 +28,8 @@ public class PatientRegistrationRequest {
     public String getConfirmPassword() { return confirmPassword; }
     public void setConfirmPassword(String confirmPassword) { this.confirmPassword = confirmPassword; }
 
+    public String getPhoneNumber() {
+        return phoneNumber;}
+
+    public void setPhoneNumber(String phoneNumber){ this.phoneNumber=phoneNumber;}
 }

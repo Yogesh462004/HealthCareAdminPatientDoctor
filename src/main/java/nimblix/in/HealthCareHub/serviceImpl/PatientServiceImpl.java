@@ -12,6 +12,7 @@ import nimblix.in.HealthCareHub.response.PrescriptionResponse;
 import nimblix.in.HealthCareHub.service.PatientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import nimblix.in.HealthCareHub.response.ApiResponse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -179,6 +180,73 @@ public class PatientServiceImpl implements PatientService {
 //        }
 //        return patient.getReviews();
         return null;
+    }
+
+    @Override
+    public ApiResponse forgotPassword(String phoneNumber, String email) {
+
+        ApiResponse response = new ApiResponse();
+
+        if(phoneNumber == null && email == null){
+            response.setStatus("200");
+            response.setMessage("Phone number or email required");
+            return response;
+        }
+
+        Optional<User> userOptional;
+
+        if(phoneNumber != null){
+            userOptional = userRepository.findByPhoneNumber(phoneNumber);
+        } else {
+            userOptional = userRepository.findByEmail(email);
+        }
+
+        if(!userOptional.isPresent()){
+            response.setStatus("404");
+            response.setMessage("User not found");
+            return response;
+        }
+
+        response.setStatus("200");
+        response.setMessage("User verified. You can reset password.");
+
+        return response;
+    }
+
+    @Override
+    public ApiResponse resetPassword(String phoneNumber, String email, String newPassword) {
+
+        ApiResponse response = new ApiResponse();
+
+        if(newPassword == null || newPassword.isEmpty()){
+            response.setStatus("200");
+            response.setMessage("New password required");
+            return response;
+        }
+
+        Optional<User> userOptional;
+
+        if(phoneNumber != null){
+            userOptional = userRepository.findByPhoneNumber(phoneNumber);
+        } else {
+            userOptional = userRepository.findByEmail(email);
+        }
+
+        if(!userOptional.isPresent()){
+            response.setStatus("404");
+            response.setMessage("User not found");
+            return response;
+        }
+
+        User user = userOptional.get();
+        user.setPassword(newPassword);
+
+        userRepository.save(user);
+
+        response.setStatus("200");
+        response.setMessage("Password reset successfully");
+
+        return response;
     }
 
 }

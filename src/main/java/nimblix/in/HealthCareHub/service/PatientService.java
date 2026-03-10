@@ -1,6 +1,7 @@
 package nimblix.in.HealthCareHub.service;
 
 import nimblix.in.HealthCareHub.model.Patient;
+import nimblix.in.HealthCareHub.response.ApiResponse;
 import nimblix.in.HealthCareHub.model.Prescription;
 import nimblix.in.HealthCareHub.model.PrescriptionMedicines;
 import nimblix.in.HealthCareHub.model.Review;
@@ -23,5 +24,8 @@ public interface PatientService {
     List<Review> getDoctorReviews(Long doctorId);
     Review addPatientReview(Long doctorId, Long patientId, String comment, int rating);
     List<Review> getPatientReviews(Long patientId);
+    ApiResponse forgotPassword(String phoneNumber, String email);
+
+    ApiResponse resetPassword(String phoneNumber, String email, String newPassword);
 }
 
