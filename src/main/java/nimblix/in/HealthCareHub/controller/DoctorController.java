@@ -118,8 +118,24 @@ public class DoctorController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<?> searchDoctor(@RequestParam String name){
-        return ResponseEntity.ok(doctorService.searchDoctorByName(name));
+    public ResponseEntity<ApiResponse<List<Doctor>>> searchDoctor(@RequestParam String name) {
+
+        List<Doctor> doctors = doctorService.searchDoctorByName(name);
+
+        if (doctors == null || doctors.isEmpty()) {
+
+            ApiResponse<List<Doctor>> response =
+                    new ApiResponse<>("FAILURE", "No doctors found", null);
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+        else {
+
+            ApiResponse<List<Doctor>> response =
+                    new ApiResponse<>("SUCCESS", "Doctors fetched successfully", doctors);
+
+            return ResponseEntity.ok(response);
+        }
     }
 
     @GetMapping("/filter")
