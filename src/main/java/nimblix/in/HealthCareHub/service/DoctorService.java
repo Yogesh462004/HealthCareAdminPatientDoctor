@@ -35,6 +35,7 @@ public interface DoctorService {
 
     ApiResponse<List<DoctorSearchResponse>> searchDoctors(String name);
     DoctorScheduleResponse updateDoctorScheduleStatus(Long scheduleId, String status);
+    Object updateDoctor(Long doctorId, Map<String,Object>updates);
 
 
     ApiResponse<List<DoctorSummaryResponse>> getDoctorsByHospitalId(Long hospitalId);
