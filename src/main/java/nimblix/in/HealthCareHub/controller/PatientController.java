@@ -1,9 +1,6 @@
 package nimblix.in.HealthCareHub.controller;
 
 import nimblix.in.HealthCareHub.model.Patient;
-import nimblix.in.HealthCareHub.response.ApiResponse;
-import nimblix.in.HealthCareHub.model.Prescription;
-import nimblix.in.HealthCareHub.model.PrescriptionMedicines;
 import nimblix.in.HealthCareHub.model.Review;
 import nimblix.in.HealthCareHub.request.PatientRegistrationRequest;
 import nimblix.in.HealthCareHub.response.ApiResponse;
@@ -14,10 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import nimblix.in.HealthCareHub.model.Patient;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
-import jakarta.validation.Valid;
 
 import jakarta.validation.Valid;
 
@@ -33,7 +26,7 @@ public class PatientController {
     private PatientService patientService;
 
 
-
+    // Register Patient
     @PostMapping("/register")
     public ApiResponse<PatientRegistrationResponse> registerPatient(
             @Valid @RequestBody PatientRegistrationRequest request) {
@@ -44,6 +37,7 @@ public class PatientController {
     }
 
 
+    // Soft Delete Patient
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<ApiResponse<Void>> deletePatient(@PathVariable Long id) {
 
@@ -58,6 +52,7 @@ public class PatientController {
     }
 
 
+    // Add Doctor Review
     @PostMapping("/{patientId}/doctors/{doctorId}/review")
     public ResponseEntity<Map<String,Object>> addDoctorReview(
             @PathVariable Long patientId,
@@ -77,6 +72,7 @@ public class PatientController {
     }
 
 
+    // Get Doctor Reviews
     @GetMapping("/doctors/{doctorId}/reviews")
     public ResponseEntity<Map<String,Object>> getDoctorReviews(@PathVariable Long doctorId) {
 
@@ -92,6 +88,7 @@ public class PatientController {
     }
 
 
+    // Doctor reviewing Patient
     @PostMapping("/{patientId}/review-by-doctor/{doctorId}")
     public ResponseEntity<Map<String,Object>> addPatientReview(
             @PathVariable Long patientId,
@@ -111,7 +108,7 @@ public class PatientController {
     }
 
 
-
+    // Get Patient Reviews
     @GetMapping("/{patientId}/reviews")
     public ResponseEntity<Map<String,Object>> getPatientReviews(@PathVariable Long patientId) {
 
@@ -127,7 +124,7 @@ public class PatientController {
     }
 
 
-
+    // Filter Patients
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse<List<Patient>>> filterPatients(
             @RequestParam(required = false) Integer day,
@@ -155,38 +152,5 @@ public class PatientController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
-}
-    @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse> forgotPassword(@RequestBody PatientRegistrationRequest request) {
-
-        ApiResponse response = patientService.forgotPassword(
-                request.getPhoneNumber(),
-                request.getEmail()
-        );
-
-        if ("SUCCESS".equals(response.getStatus())) {
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse> resetPassword(@RequestBody PatientRegistrationRequest request) {
-
-        ApiResponse response = patientService.resetPassword(
-                request.getPhoneNumber(),
-                request.getEmail(),
-                request.getPassword()
-        );
-
-        if ("SUCCESS".equals(response.getStatus())) {
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }
-    }
-
 
 }

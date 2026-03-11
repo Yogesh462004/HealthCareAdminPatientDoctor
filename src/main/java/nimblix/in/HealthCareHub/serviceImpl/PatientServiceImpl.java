@@ -3,10 +3,10 @@ package nimblix.in.HealthCareHub.serviceImpl;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import nimblix.in.HealthCareHub.constants.HealthCareConstants;
-import nimblix.in.HealthCareHub.response.ApiResponse;
 import nimblix.in.HealthCareHub.model.*;
 import nimblix.in.HealthCareHub.repository.*;
 import nimblix.in.HealthCareHub.request.PatientRegistrationRequest;
+import nimblix.in.HealthCareHub.response.ApiResponse;
 import nimblix.in.HealthCareHub.response.PatientRegistrationResponse;
 import nimblix.in.HealthCareHub.response.PrescriptionMedicineResponse;
 import nimblix.in.HealthCareHub.response.PrescriptionResponse;
@@ -41,51 +41,28 @@ public class PatientServiceImpl implements PatientService {
     private HospitalRepository hospitalRepository;
 
     @Autowired
-    private PrescriptionMedicineRepository prescriptionMedicinesRepository;
-
-    @Autowired
-    private PatientRepository patientRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private DoctorRepository doctorRepository;
-
-    @Autowired
     private EntityManager entityManager;
 
     @Override
     @Transactional
     public PatientRegistrationResponse registerPatient(PatientRegistrationRequest request) {
 
-        // Check if email exists
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             return new PatientRegistrationResponse(false, "Email already exists");
         }
 
-        // Check password match
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             return new PatientRegistrationResponse(false, "Password and Confirm Password do not match");
         }
 
         User user = new User();
         user.setEmail(request.getEmail());
+        user.setPassword(request.getPassword());
         user.setRole(Role.PATIENT);
         user.setEnabled(true);
 
         userRepository.save(user);
 
-        // Create User
-        User user = new User();
-        user.setEmail(request.getEmail());
-//        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(nimblix.in.HealthCareHub.model.Role.PATIENT);
-        user.setEnabled(true); // required for login
-
-        userRepository.save(user);
-
-        // Create Patient linked to User
         Patient patient = new Patient();
         patient.setName(request.getFirstName() + " " + request.getLastName());
         patient.setGender(request.getGender());
@@ -95,7 +72,6 @@ public class PatientServiceImpl implements PatientService {
 
         return new PatientRegistrationResponse(true, "Registration successful");
     }
-
 
     @Override
     public PrescriptionResponse<Prescription> getPrescription(Long id) {
@@ -134,23 +110,9 @@ public class PatientServiceImpl implements PatientService {
         }
     }
 
-
     @Override
     public Patient savePatient(Patient patient) {
         return patientRepository.save(patient);
-    }
-
-    @Override
-    public String softDeletePatient(Long id) {
-
-        Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
-
-        patient.setIsDeleted(true);
-
-        patientRepository.save(patient);
-
-        return "Patient soft deleted successfully";
     }
 
     @Override
@@ -158,11 +120,10 @@ public class PatientServiceImpl implements PatientService {
 
         Optional<Patient> optionalPatient = patientRepository.findById(id);
 
-        if(optionalPatient.isPresent()) {
+        if (optionalPatient.isPresent()) {
 
             Patient patient = optionalPatient.get();
-
-            patient.setDeleted(true);   // soft delete flag
+            patient.setIsDeleted(true);
 
             patientRepository.save(patient);
 
@@ -170,11 +131,6 @@ public class PatientServiceImpl implements PatientService {
         }
 
         return false;
-    }
-
-    @Override
-    public Patient savePatient(Patient patient) {
-        return patientRepository.save(patient);
     }
 
     @Override
@@ -217,7 +173,6 @@ public class PatientServiceImpl implements PatientService {
         return doctor.getReviews();
     }
 
-
     @Override
     public Review addHospitalReview(Long patientId, Long hospitalId, String comment, int rating) {
 
@@ -244,7 +199,6 @@ public class PatientServiceImpl implements PatientService {
 
         return review;
     }
-
 
     @Override
     public Review addPatientReview(Long doctorId, Long patientId, String comment, int rating) {
@@ -329,12 +283,12 @@ public class PatientServiceImpl implements PatientService {
 
         return response;
     }
+
     @Override
     public ApiResponse resetPassword(String phoneNumber, String email, String newPassword) {
 
         ApiResponse response = new ApiResponse();
 
-        // Check password
         if (newPassword == null || newPassword.isEmpty()) {
             response.setStatus("FAILURE");
             response.setMessage("New password required");
@@ -343,7 +297,6 @@ public class PatientServiceImpl implements PatientService {
 
         Optional<User> userOptional;
 
-        // Check user by phone or email
         if (phoneNumber != null && !phoneNumber.isEmpty()) {
             userOptional = userRepository.findByPhoneNumber(phoneNumber);
         } else if (email != null && !email.isEmpty()) {
@@ -354,14 +307,12 @@ public class PatientServiceImpl implements PatientService {
             return response;
         }
 
-        // User not found
         if (!userOptional.isPresent()) {
             response.setStatus("FAILURE");
             response.setMessage("User not found");
             return response;
         }
 
-        // Update password
         User user = userOptional.get();
         user.setPassword(newPassword);
 
