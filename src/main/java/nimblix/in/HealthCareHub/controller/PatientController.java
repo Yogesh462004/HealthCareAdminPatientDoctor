@@ -26,6 +26,7 @@ public class PatientController {
     private PatientService patientService;
 
 
+
     @PostMapping("/register")
     public ApiResponse<PatientRegistrationResponse> registerPatient(
             @Valid @RequestBody PatientRegistrationRequest request) {
@@ -48,6 +49,7 @@ public class PatientController {
 
         return ResponseEntity.ok(response);
     }
+
 
     @PostMapping("/{patientId}/doctors/{doctorId}/review")
     public ResponseEntity<Map<String,Object>> addDoctorReview(
@@ -102,6 +104,7 @@ public class PatientController {
     }
 
 
+
     @GetMapping("/{patientId}/reviews")
     public ResponseEntity<Map<String,Object>> getPatientReviews(@PathVariable Long patientId) {
 
@@ -115,6 +118,7 @@ public class PatientController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
 
     @GetMapping("/filter")
