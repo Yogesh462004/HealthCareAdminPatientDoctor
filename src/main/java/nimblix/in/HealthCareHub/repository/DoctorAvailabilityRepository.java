@@ -63,9 +63,7 @@ public interface DoctorAvailabilityRepository extends JpaRepository<DoctorAvaila
            d.availableDate,
            d.startTime,
            d.endTime,
-           d.isAvailable,
-           d.createdTime,
-           d.updatedTime
+           d.isAvailable
        )
        FROM DoctorAvailability d
        WHERE d.id = :slotId
