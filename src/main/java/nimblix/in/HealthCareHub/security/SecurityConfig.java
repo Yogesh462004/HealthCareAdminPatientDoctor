@@ -42,7 +42,9 @@ public class SecurityConfig {
                                 ("/doctor/search"),
                                 "/api/filter/**",
                                 "/api/dashboard/**",
-                                "/api/patients/register/**"
+                                "/api/patients/register/**",
+                                "/api/patients/forgot-password",
+                                "/api/patients/reset-password"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

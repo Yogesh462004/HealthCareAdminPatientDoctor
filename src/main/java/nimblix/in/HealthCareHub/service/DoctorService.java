@@ -17,8 +17,8 @@ public interface DoctorService {
     String updateDoctorDetails(DoctorRegistrationRequest request);
 
     String deleteDoctorDetails(Long doctorId);
+    Doctor getDoctorById(Long doctorId);
 
-    DoctorProfileResponse getDoctorById(Long doctorId);
     List<String> getAllRoles();
     List<Doctor> searchDoctorByName(String name);
     DoctorListResponse getDoctorsByHospitalId(Long hospitalId);

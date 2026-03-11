@@ -1,6 +1,7 @@
 package nimblix.in.HealthCareHub.service;
 
 import nimblix.in.HealthCareHub.model.Patient;
+import nimblix.in.HealthCareHub.response.ApiResponse;
 import nimblix.in.HealthCareHub.model.Prescription;
 import nimblix.in.HealthCareHub.model.PrescriptionMedicines;
 import nimblix.in.HealthCareHub.model.Review;
@@ -16,6 +17,7 @@ import java.util.List;
 public interface PatientService {
     PrescriptionResponse<Prescription> getPrescription(Long id);
     PatientRegistrationResponse registerPatient(PatientRegistrationRequest request);
+    boolean softDeletePatient(Long id);
     PrescriptionMedicineResponse<PrescriptionMedicines> getPrescriptionMedicines(Long prescription_id);
     Patient savePatient(Patient patient);
    // String softDeletePatient(Long id);
@@ -26,5 +28,8 @@ public interface PatientService {
     List<Patient> filterPatientsByDay(int day);
     List<Patient> filterPatientsByMonth(int month);
     List<Patient> filterPatientsByYear(int year);
+    ApiResponse forgotPassword(String phoneNumber, String email);
+
+    ApiResponse resetPassword(String phoneNumber, String email, String newPassword);
 }
 

@@ -9,6 +9,8 @@ import lombok.Setter;
 @Setter
 public class PatientRegistrationRequest {
 
+    private String phoneNumber;
+
     @NotBlank(message = "First name is required")
     private String firstName;
 
@@ -27,14 +29,4 @@ public class PatientRegistrationRequest {
 
     @NotBlank(message = "Confirm password is required")
     private String confirmPassword;
-
-    // Optional patient fields
-    private Integer age;
-    private String phone;
-    private String disease;
-    private String admissionDate; // format: YYYY-MM-DD
-    private String dischargeDate; // format: YYYY-MM-DD
-    private Boolean surgeryRequired;
-    private Boolean emergencyCase;
-    private Long hospitalId;
 }
