@@ -7,6 +7,7 @@ import nimblix.in.HealthCareHub.response.HospitalResponse;
 import nimblix.in.HealthCareHub.response.HospitalSpecializationResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,21 +15,10 @@ import java.util.Optional;
 public interface HospitalRepository extends JpaRepository<Hospital,Long> {
     Optional<Hospital> findByName(String name);
     List<Hospital> findByNameContainingIgnoreCase(String name);
-    @Query("""
-        SELECT new nimblix.in.HealthCareHub.response.HospitalResponse(
-        h.id,
-        h.name,
-        h.address,
-        h.city,
-        h.state,
-        h.phone,
-        h.email,
-        h.totalBeds
-    )
-    FROM Hospital h
-    """)
-    List<HospitalResponse> getAllHospitals();
+
     Optional<Hospital> findByEmail(String email);
+
+    Optional<Hospital> findByNameAndCityAndState(String name, String city, String state);
 
     // Query to fetch total beds
     @Query("SELECT COALESCE(SUM(h.totalBeds),0) FROM Hospital h")
@@ -38,50 +28,68 @@ public interface HospitalRepository extends JpaRepository<Hospital,Long> {
     @Query("SELECT COALESCE(AVG(h.rating),0) FROM Hospital h")
     Double getAverageRating();
 
+   /* Query used to fetch hospital dropdown list for dashboard filter
+   ORDER BY used to return hospitals in sequential order */
+
     @Query("""
-       SELECT new nimblix.in.HealthCareHub.response.DropdownResponse(
-       h.id,
-       h.name
-       )
-       FROM Hospital h
-       ORDER BY h.name
-       """)
-    List<DropdownResponse> getHospitalDropdown();
+SELECT new nimblix.in.HealthCareHub.response.DropdownResponse(
+h.id,
+h.name
+)
+FROM Hospital h
+ORDER BY h.id ASC
+""")
+    List<DropdownResponse> getHospitalDropdownList();
+
 
     /*Query used to fetch hospital overview details for dashboard table
  We join hospital and doctor tables to calculate doctor count */
     @Query("""
         SELECT new nimblix.in.HealthCareHub.response.HospitalOverviewResponse(
-        h.id,
-        h.name,
-        CONCAT(h.city, ', ', h.state),
-        h.rating,
-        COUNT(d.id),
-        h.totalBeds,
-        CASE WHEN h.isActive = true THEN 'Active' ELSE 'Inactive' END
+            h.id,
+            h.name,
+            h.city,
+            h.rating,
+            COUNT(d.id),
+            h.totalBeds,
+            h.status
         )
         FROM Hospital h
         LEFT JOIN Doctor d ON d.hospital.id = h.id
-        GROUP BY h.id, h.name, h.city, h.state, h.rating, h.totalBeds, h.isActive
-        ORDER BY h.name
+        GROUP BY h.id
     """)
     List<HospitalOverviewResponse> getHospitalOverview();
 
     // Query used to fetch hospitals based on specialization
     @Query("""
-    SELECT new nimblix.in.HealthCareHub.response.HospitalSpecializationResponse(
+        SELECT new nimblix.in.HealthCareHub.response.HospitalSpecializationResponse(
+            h.id,
+            h.name,
+            CONCAT(h.city, ', ', h.state),
+            s.name
+        )
+        FROM Hospital h
+        JOIN Doctor d ON d.hospital.id = h.id
+        JOIN Specialization s ON d.specialization.id = s.id
+        WHERE LOWER(s.name) LIKE LOWER(CONCAT('%', :specialization, '%'))
+    """)
+    List<HospitalSpecializationResponse>
+    findHospitalsBySpecialization(@Param("specialization") String specialization);
+
+
+    @Query("""
+    SELECT new nimblix.in.HealthCareHub.response.HospitalResponse(
     h.id,
     h.name,
-    CONCAT(h.city, ', ', h.state),
-    s.name
+    h.address,
+    h.city,
+    h.state,
+    h.phone,
+    h.email,
+    h.totalBeds
     )
-    FROM Doctor d
-    JOIN d.hospital h
-    JOIN d.specialization s
-    WHERE LOWER(s.name) = LOWER(:specialization)
-    GROUP BY h.id, h.name, h.city, h.state, s.name
-    ORDER BY h.name
+    FROM Hospital h
     """)
-    List<HospitalSpecializationResponse> findHospitalsBySpecialization(String specialization);
+    List<HospitalResponse> getAllHospitals();
 
 }

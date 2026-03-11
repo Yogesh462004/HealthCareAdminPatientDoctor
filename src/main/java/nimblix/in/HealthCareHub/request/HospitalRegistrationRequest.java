@@ -13,9 +13,17 @@ public class HospitalRegistrationRequest {
     private String address;
     private String city;
     private String state;
+    private String country;
     private String phone;
     private String email;
+    private String password;
+    private String confirmPassword;
+    private Integer establishedYear;
     private Integer totalBeds;
+    private List<String> specializations;
+    private List<String> doctors;
+    private String aboutHospital;
+
 
     private List<Room> rooms;
 

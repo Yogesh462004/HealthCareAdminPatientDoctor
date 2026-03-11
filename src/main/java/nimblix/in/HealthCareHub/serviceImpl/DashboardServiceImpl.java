@@ -21,7 +21,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final PatientRepository patientRepository;
 
     @Override
-    public DashboardSummaryResponse getDashboardSummary() {
+    public ApiResponse<DashboardSummaryResponse> getDashboardSummary() {
 
         // Query to fetch total beds
         Long totalBeds = hospitalRepository.getTotalBeds();
@@ -35,44 +35,47 @@ public class DashboardServiceImpl implements DashboardService {
         // Query to fetch average hospital rating
         Double averageRating = hospitalRepository.getAverageRating();
 
-        // Edge Case 1: handle null values
+        // Edge Case handling
         if (totalBeds == null) totalBeds = 0L;
         if (activeDoctors == null) activeDoctors = 0L;
-        if (patientsServed == null) patientsServed = 0L;
         if (averageRating == null) averageRating = 0.0;
 
-        return new DashboardSummaryResponse(
-                HealthCareConstants.SUCCESS,
-                HealthCareConstants.DASHBOARD_FETCHED_SUCCESS,
+        DashboardSummaryResponse summary = new DashboardSummaryResponse(
                 totalBeds,
                 activeDoctors,
                 patientsServed,
                 averageRating
         );
+
+        return new ApiResponse<>(
+                HealthCareConstants.SUCCESS,
+                HealthCareConstants.DASHBOARD_FETCHED_SUCCESS,
+                summary
+        );
     }
 
 
     @Override
-    public AdmissionDischargeChartResponse getAdmissionsDischargesActivity() {
+    public ApiResponse<List<AdmissionDischargeActivityResponse>> getAdmissionsDischargesActivity() {
 
-        // Edge Case: calculate start date for last 14 days
+        // Edge Case 1: calculate last 14 days start date
         LocalDate startDate = LocalDate.now().minusDays(14);
 
-        // Query used to fetch admissions and discharges data
+        // Query used to fetch admissions and discharges activity
         List<AdmissionDischargeActivityResponse> activity =
                 patientRepository.getAdmissionsDischargesLast14Days(startDate);
 
-        // Edge Case: no activity found
+        // Edge Case 2: No activity found
         if (activity.isEmpty()) {
 
-            return new AdmissionDischargeChartResponse(
+            return new ApiResponse<>(
                     HealthCareConstants.SUCCESS,
                     HealthCareConstants.NO_ACTIVITY_FOUND,
                     List.of()
             );
         }
 
-        return new AdmissionDischargeChartResponse(
+        return new ApiResponse<>(
                 HealthCareConstants.SUCCESS,
                 HealthCareConstants.ACTIVITY_FETCHED_SUCCESS,
                 activity
@@ -80,23 +83,23 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
-    public SpecializationDistributionChartResponse getSpecializationDistribution() {
+    public ApiResponse<List<SpecializationDistributionResponse>> getSpecializationsDistribution() {
 
         // Query used to fetch specialization distribution
         List<SpecializationDistributionResponse> distribution =
-                doctorRepository.getSpecializationDistribution();
+                doctorRepository.getSpecializationsDistribution();
 
         // Edge Case: No specialization data
         if (distribution.isEmpty()) {
 
-            return new SpecializationDistributionChartResponse(
+            return new ApiResponse<>(
                     HealthCareConstants.SUCCESS,
                     HealthCareConstants.NO_SPECIALIZATION_FOUND,
                     List.of()
             );
         }
 
-        return new SpecializationDistributionChartResponse(
+        return new ApiResponse<>(
                 HealthCareConstants.SUCCESS,
                 HealthCareConstants.SPECIALIZATION_FETCHED_SUCCESS,
                 distribution
@@ -104,26 +107,26 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
-    public SurgeryEmergencyChartResponse getSurgeriesEmergenciesActivity() {
+    public ApiResponse<List<SurgeryEmergencyActivityResponse>> getSurgeriesEmergenciesActivity() {
 
-        // Edge Case: calculate last 14 days start date
+        // Edge Case 1: calculate last 14 days start date
         LocalDate startDate = LocalDate.now().minusDays(14);
 
-        // Query used to fetch surgeries and emergencies data
+        // Query used to fetch surgeries and emergencies activity
         List<SurgeryEmergencyActivityResponse> activity =
                 patientRepository.getSurgeriesEmergenciesLast14Days(startDate);
 
-        // Edge Case: No activity found
+        // Edge Case 2: No activity found
         if (activity.isEmpty()) {
 
-            return new SurgeryEmergencyChartResponse(
+            return new ApiResponse<>(
                     HealthCareConstants.SUCCESS,
                     HealthCareConstants.NO_ACTIVITY_FOUND,
                     List.of()
             );
         }
 
-        return new SurgeryEmergencyChartResponse(
+        return new ApiResponse<>(
                 HealthCareConstants.SUCCESS,
                 HealthCareConstants.ACTIVITY_FETCHED_SUCCESS,
                 activity
@@ -131,23 +134,22 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
-    public HospitalOverviewTableResponse getHospitalOverview() {
+    public ApiResponse<List<HospitalOverviewResponse>> getHospitalOverview() {
 
-        // Query used to fetch hospital overview data
         List<HospitalOverviewResponse> hospitals =
                 hospitalRepository.getHospitalOverview();
 
         // Edge Case: No hospitals found
         if (hospitals.isEmpty()) {
 
-            return new HospitalOverviewTableResponse(
+            return new ApiResponse<>(
                     HealthCareConstants.SUCCESS,
                     HealthCareConstants.NO_HOSPITAL_FOUND,
                     List.of()
             );
         }
 
-        return new HospitalOverviewTableResponse(
+        return new ApiResponse<>(
                 HealthCareConstants.SUCCESS,
                 HealthCareConstants.HOSPITAL_OVERVIEW_FETCHED_SUCCESS,
                 hospitals

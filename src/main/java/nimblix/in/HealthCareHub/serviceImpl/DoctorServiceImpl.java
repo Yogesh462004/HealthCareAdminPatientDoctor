@@ -2,30 +2,30 @@ package nimblix.in.HealthCareHub.serviceImpl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import nimblix.in.HealthCareHub.constants.HealthCareConstants;
 import nimblix.in.HealthCareHub.exception.DoctorNotFoundException;
 import nimblix.in.HealthCareHub.exception.UserNotFoundException;
 import nimblix.in.HealthCareHub.model.*;
 import nimblix.in.HealthCareHub.repository.*;
-import nimblix.in.HealthCareHub.request.DoctorAvailabilityRequest;
+import nimblix.in.HealthCareHub.request.DoctorAddRequest;
 import nimblix.in.HealthCareHub.request.DoctorRegistrationRequest;
 import nimblix.in.HealthCareHub.request.DoctorScheduleRequest;
+import nimblix.in.HealthCareHub.response.DoctorSearchResponse;
 import nimblix.in.HealthCareHub.response.*;
 import nimblix.in.HealthCareHub.service.DoctorService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
+
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DoctorServiceImpl implements DoctorService {
@@ -37,16 +37,6 @@ public class DoctorServiceImpl implements DoctorService {
     private final DoctorAvailabilityRepository availabilityRepository;
     private final PatientRepository patientRepository;
     private final DoctorScheduleRepository doctorScheduleRepository;
-
-    // valid status values for updateDoctorStatus
-    private static final Set<String> VALID_STATUSES = Set.of(
-            HealthCareConstants.DOCTOR_STATUS_AVAILABLE,
-            HealthCareConstants.DOCTOR_STATUS_IN_OPERATION,
-            HealthCareConstants.DOCTOR_STATUS_ON_BREAK,
-            HealthCareConstants.DOCTOR_STATUS_ON_LEAVE,
-            HealthCareConstants.DOCTOR_STATUS_BUSY,
-            HealthCareConstants.DOCTOR_STATUS_OFF_DUTY
-    );
 
     @Override
     public String registerDoctor(DoctorRegistrationRequest request) {
@@ -155,28 +145,47 @@ public class DoctorServiceImpl implements DoctorService {
     }
 
     @Override
-    public Doctor getDoctorById(Long doctorId) {
+    public DoctorProfileResponse getDoctorById(Long doctorId) {
 
-        // Edge case 1: null or invalid ID
+        // Edge case 1: null or negative ID
         if (doctorId == null || doctorId <= 0) {
-            throw new IllegalArgumentException("Doctor ID cannot be null, 0, or negative");
+            throw new IllegalArgumentException("Doctor ID cannot be 0 or Negative");
         }
 
         // Edge case 2: Doctor not found
         Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() ->
-                        new DoctorNotFoundException("Doctor not found with ID: " + doctorId)
-                );
+                .orElseThrow(() -> new DoctorNotFoundException("Doctor not found with ID: " + doctorId));
 
-        // Edge case 3: Doctor inactive / soft deleted
+        // Edge case 3: Doctor is inactive / soft deleted
         if (HealthCareConstants.IN_ACTIVE.equals(doctor.getIsActive())) {
-            throw new DoctorNotFoundException(
-                    "Doctor with ID " + doctorId + " is no longer active."
-            );
+            throw new DoctorNotFoundException("Doctor with ID " + doctorId + " is no longer active.");
         }
 
-        return doctor;
+        // Map entity → DTO (password excluded for security)
+        return DoctorProfileResponse.builder()
+                .doctorId(doctor.getId())
+                .name(doctor.getName())
+                .experienceYears(doctor.getExperienceYears())
+                .phone(doctor.getPhone())
+                .email(doctor.getEmailId())
+                .qualification(doctor.getQualification())
+
+                // specialization details
+                .specializationId(doctor.getSpecialization().getId())
+                .specializationName(doctor.getSpecialization().getName())
+
+                // hospital details
+                .hospitalId(doctor.getHospital().getId())
+                .hospitalName(doctor.getHospital().getName())
+                .hospitalAddress(doctor.getHospital().getAddress())
+                .hospitalCity(doctor.getHospital().getCity())
+                .hospitalState(doctor.getHospital().getState())
+                .hospitalPhone(doctor.getHospital().getPhone())
+                .hospitalEmail(doctor.getHospital().getEmail())
+                .hospitalTotalBeds(doctor.getHospital().getTotalBeds())
+                .build();
     }
+
     @Override
     public DoctorReviewResponse getDoctorReviews(Long doctorId) {
 
@@ -196,62 +205,88 @@ public class DoctorServiceImpl implements DoctorService {
 
     @Override
     public List<Doctor> searchDoctorByName(String name) {
-
-        if (name == null) {
-            return List.of();
-        }
-System.out.println(doctorRepository.searchDoctorByName(name));
-        return doctorRepository.searchDoctorByName(name);
+        return doctorRepository.findByNameContainingIgnoreCase(name);
     }
 
+
     @Override
-    public DoctorListResponse getDoctorsByHospitalId(Long hospitalId) {
-        // Edge Case 1: hospitalId validation
+    public ApiResponse<List<DoctorSummaryResponse>> getDoctorsByHospitalId(Long hospitalId) {
+
+        log.info("Fetching doctors for hospital id: {}", hospitalId);
+
+        // Edge Case 1: invalid id
         if (hospitalId == null || hospitalId <= 0) {
-            throw new IllegalArgumentException(HealthCareConstants.INVALID_HOSPITAL_ID);
+            throw new IllegalArgumentException(
+                    HealthCareConstants.INVALID_HOSPITAL_ID);
         }
 
-        // Query used to fetch doctors for the given hospital
-        List<Doctor> doctors = doctorRepository.findDoctorsByHospitalId(hospitalId);
+        // Edge Case 2: hospital existence
+        if (!hospitalRepository.existsById(hospitalId)) {
+            throw new RuntimeException(
+                    HealthCareConstants.HOSPITAL_NOT_FOUND);
+        }
 
-        // Edge Case 2: No doctors found
+        // Fetch doctors
+        List<DoctorSummaryResponse> doctors =
+                doctorRepository.findDoctorsByHospitalId(hospitalId);
+
+        // Edge Case 3: no doctors
         if (doctors.isEmpty()) {
-            return new DoctorListResponse(
-                    HealthCareConstants.SUCCESS,
-                    HealthCareConstants.NO_DOCTORS_FOUND,
-                    List.of()
-            );
+            return ApiResponse.<List<DoctorSummaryResponse>>builder()
+                    .status(HealthCareConstants.SUCCESS)
+                    .message(HealthCareConstants.NO_DOCTORS_FOUND)
+                    .data(List.of())
+                    .build();
         }
 
-        List<DoctorSummaryResponse> doctorResponses = doctors.stream()
-                .map(doctor -> new DoctorSummaryResponse(
-                        doctor.getId(),
-                        doctor.getName(),
-                        doctor.getSpecialization() != null
-                                ? doctor.getSpecialization().getName()
-                                : null
-                ))
-                .toList();
-
-        return new DoctorListResponse(
-                HealthCareConstants.SUCCESS,
-                HealthCareConstants.DOCTORS_FETCHED_SUCCESS,
-                doctorResponses
-        );
+        return ApiResponse.<List<DoctorSummaryResponse>>builder()
+                .status(HealthCareConstants.SUCCESS)
+                .message(HealthCareConstants.DOCTORS_FETCHED_SUCCESS)
+                .data(doctors)
+                .build();
     }
+
+
 
     @Override
-    public List<Doctor> filterDoctorsBySpecialization(String specialization) {
+    public ApiResponse<List<DoctorFilterResponse>> filterDoctorsBySpecialization(String specialization) {
 
+        log.info("Filtering doctors by specialization: {}", specialization);
+
+        // Edge Case 1
         if (specialization == null || specialization.trim().isEmpty()) {
-            return null;
+            throw new IllegalArgumentException(
+                    HealthCareConstants.INVALID_SPECIALIZATION);
         }
 
-        return doctorRepository
-                .findBySpecialization_NameIgnoreCase(specialization.trim());
+        specialization = specialization.trim();
+
+        // Edge Case 2 - specialization validation
+        if(!specializationRepository.existsByNameIgnoreCase(specialization)){
+            throw new RuntimeException(
+                    HealthCareConstants.SPECIALIZATION_NOT_FOUND);
+        }
+
+        List<DoctorFilterResponse> doctors =
+                doctorRepository.findDoctorsBySpecialization(specialization);
+
+        // Edge Case 3 - no doctors
+        if(doctors.isEmpty()){
+            return ApiResponse.<List<DoctorFilterResponse>>builder()
+                    .status(HealthCareConstants.SUCCESS)
+                    .message(HealthCareConstants.NO_DOCTORS_FOUND)
+                    .data(List.of())
+                    .build();
+        }
+
+        return ApiResponse.<List<DoctorFilterResponse>>builder()
+                .status(HealthCareConstants.SUCCESS)
+                .message(HealthCareConstants.DOCTORS_FETCHED_SUCCESS)
+                .data(doctors)
+                .build();
     }
 
-    // GET /api/doctors/availability
+    // ✅ GET /api/doctors/availability
     @Override
     public List<DoctorAvailabilityResponse> getAllAvailableDoctors() {
 
@@ -270,6 +305,24 @@ System.out.println(doctorRepository.searchDoctorByName(name));
                         .build())
                 .collect(Collectors.toList());
     }
+
+//    @Override
+//    public List<DoctorAvailabilityResponse> getDoctorAvailability() {
+//
+//        List<DoctorAvailability> slots =
+//                availabilityRepository.findByIsAvailableTrue();
+//
+//        return slots.stream().map(slot -> DoctorAvailabilityResponse.builder()
+//                .id(slot.getId())
+//                .doctorId(slot.getDoctor().getId())
+//                .doctorName(slot.getDoctor().getName())
+//                .availableDate(slot.getAvailableDate())
+//                .startTime(slot.getStartTime())
+//                .endTime(slot.getEndTime())
+//                .available(slot.isAvailable())
+//                .build()
+//        ).collect(Collectors.toList());
+//    }
 
     @Override
     public List<Map<String, Object>> getDoctorAvailability(Long doctorId) {
@@ -290,7 +343,7 @@ System.out.println(doctorRepository.searchDoctorByName(name));
 
     @Transactional
     @Override
-    public DoctorProfileResponse addDoctor(DoctorRegistrationRequest request) {
+    public ApiResponse<DoctorProfileResponse> addDoctor(DoctorAddRequest request) {
 
         // Edge Case 1
         if (request == null) {
@@ -333,153 +386,49 @@ System.out.println(doctorRepository.searchDoctorByName(name));
 
         Doctor savedDoctor = doctorRepository.save(doctor);
 
-        // Fetch response using SQL projection
-        return doctorRepository.getDoctorProfile(savedDoctor.getId());
+        // Fetch profile projection
+        DoctorProfileResponse profile =
+                doctorRepository.getDoctorProfile(savedDoctor.getId());
+
+        return ApiResponse.<DoctorProfileResponse>builder()
+                .status(HealthCareConstants.SUCCESS)
+                .message(HealthCareConstants.DOCTOR_ADDED_SUCCESS)
+                .data(profile)
+                .build();
     }
 
-
     @Override
-    public DoctorAvailabilityResponse setDoctorAvailability(DoctorAvailabilityRequest request) {
-
-        // Edge Case 1: doctorId null or invalid
-        if (request.getDoctorId() == null || request.getDoctorId() <= 0) {
-            throw new IllegalArgumentException("Doctor ID is required and must be greater than 0");
-        }
-
-        // Edge Case 2: Doctor not found
-        Doctor doctor = doctorRepository.findById(request.getDoctorId())
-                .orElseThrow(() -> new DoctorNotFoundException(
-                        HealthCareConstants.DOCTORNOTFOUND + request.getDoctorId()));
-
-        // Edge Case 3: Doctor is inactive / soft deleted
-        if (HealthCareConstants.IN_ACTIVE.equals(doctor.getIsActive())) {
-            throw new DoctorNotFoundException(
-                    "Doctor with ID " + request.getDoctorId() + " is inactive and cannot set availability");
-        }
-
-        // Edge Case 4: availableDate missing
-        if (request.getAvailableDate() == null || request.getAvailableDate().trim().isEmpty()) {
-            throw new IllegalArgumentException("Available date is required");
-        }
-
-        // Edge Case 5: startTime missing
-        if (request.getStartTime() == null || request.getStartTime().trim().isEmpty()) {
-            throw new IllegalArgumentException("Start time is required");
-        }
-
-        // Edge Case 6: endTime missing
-        if (request.getEndTime() == null || request.getEndTime().trim().isEmpty()) {
-            throw new IllegalArgumentException("End time is required");
-        }
-
-        // Edge Case 7: startTime must be before endTime
-        if (request.getStartTime().compareTo(request.getEndTime()) >= 0) {
-            throw new IllegalArgumentException(
-                    "Start time must be before end time. Got: "
-                            + request.getStartTime() + " → " + request.getEndTime());
-        }
-
-        // Edge Case 8: overlapping slot already exists for this doctor + date + time range
-        if (availabilityRepository.existsOverlappingSlot(
+    public String setDoctorAvailability(DoctorRegistrationRequest request) {
+        doctorRepository.findById(request.getDoctorId())
+                .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + request.getDoctorId()));
+        doctorRepository.insertAvailability(
                 request.getDoctorId(),
                 request.getAvailableDate(),
                 request.getStartTime(),
-                request.getEndTime())) {
-            throw new IllegalArgumentException(
-                    "An overlapping slot already exists for Dr. " + doctor.getName()
-                            + " on " + request.getAvailableDate()
-                            + " between " + request.getStartTime() + " - " + request.getEndTime());
-        }
-
-        // Build and save
-        DoctorAvailability availability = DoctorAvailability.builder()
-                .doctor(doctor)
-                .availableDate(request.getAvailableDate())
-                .startTime(request.getStartTime())
-                .endTime(request.getEndTime())
-                .isAvailable(request.getIsAvailable() != null ? request.getIsAvailable() : true)
-                .build();
-
-        DoctorAvailability saved = availabilityRepository.save(availability);
-
-        // Return saved slot as typed response (controller wraps in ApiResponse)
-        return availabilityRepository.getSlotResponseById(saved.getId());
-    }
-
-
-    @Override
-    public DoctorStatusResponse updateDoctorStatus(Long doctorId, String status) {
-
-        // Edge Case 3: Doctor not found
-        Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new DoctorNotFoundException(
-                        HealthCareConstants.DOCTORNOTFOUND + doctorId));
-
-        // Edge Case 4: Doctor is inactive / soft deleted
-        if (HealthCareConstants.IN_ACTIVE.equals(doctor.getIsActive())) {
-            throw new DoctorNotFoundException(
-                    "Doctor with ID " + doctorId + " is inactive and cannot update status");
-        }
-
-        // Edge Case 5: invalid status value
-        if (!VALID_STATUSES.contains(status.toUpperCase())) {
-            throw new IllegalArgumentException(
-                    "Invalid status: '" + status + "'. Allowed values are: "
-                            + String.join(", ", VALID_STATUSES));
-        }
-
-        // Edge Case 6: doctor already has the same status — no need to save again
-        if (status.equalsIgnoreCase(doctor.getDoctorStatus())) {
-            return new DoctorStatusResponse(
-                    doctor.getId(),
-                    doctor.getName(),
-                    doctor.getDoctorStatus(),
-                    resolveStatusLabel(doctor.getDoctorStatus())
-            );
-        }
-
-        // Update and save
-        doctor.setDoctorStatus(status.toUpperCase());
-        doctorRepository.save(doctor);
-
-        return new DoctorStatusResponse(
-                doctor.getId(),
-                doctor.getName(),
-                doctor.getDoctorStatus(),
-                resolveStatusLabel(doctor.getDoctorStatus())
+                request.getEndTime(),
+                request.isAvailable()
         );
+        return "Doctor availability set successfully";
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // ✅ GET /api/doctors/{doctorId}/status
-    // CHANGED: was wrapping DoctorStatusResponse inside Map
-    //          now: returns DoctorStatusResponse directly (controller wraps in ApiResponse)
-    //
-    // Edge Cases:
-    //   1. doctorId <= 0                    (handled in controller)
-    //   2. Doctor not found in DB
-    //   3. Doctor is inactive (soft deleted)
-    //   4. doctorStatus field is null → default to AVAILABLE
-    // ─────────────────────────────────────────────────────────────────────────
+    // Returns String — same pattern as registerDoctor
+    @Override
+    public String updateDoctorStatus(Long doctorId, String status) {
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + doctorId));
+        doctor.setDoctorStatus(status);
+        doctorRepository.save(doctor);
+        return "Doctor status updated to: " + resolveStatusLabel(status);
+    }
+
+    //  Returns DoctorStatusResponse — same pattern as getDoctorProfile
     @Override
     public DoctorStatusResponse getDoctorStatus(Long doctorId) {
-
-        // Edge Case 2: Doctor not found
         Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new DoctorNotFoundException(
-                        HealthCareConstants.DOCTORNOTFOUND + doctorId));
-
-        // Edge Case 3: Doctor is inactive / soft deleted
-        if (HealthCareConstants.IN_ACTIVE.equals(doctor.getIsActive())) {
-            throw new DoctorNotFoundException(
-                    "Doctor with ID " + doctorId + " is inactive");
-        }
-
-        // Edge Case 4: status field is null → default to AVAILABLE
-        String status = (doctor.getDoctorStatus() != null && !doctor.getDoctorStatus().isBlank())
+                .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + doctorId));
+        String status = doctor.getDoctorStatus() != null
                 ? doctor.getDoctorStatus()
                 : HealthCareConstants.DOCTOR_STATUS_AVAILABLE;
-
         return new DoctorStatusResponse(
                 doctor.getId(),
                 doctor.getName(),
@@ -490,122 +439,44 @@ System.out.println(doctorRepository.searchDoctorByName(name));
 
     private String resolveStatusLabel(String status) {
         return switch (status) {
-            case HealthCareConstants.DOCTOR_STATUS_AVAILABLE    -> "Available";
-            case HealthCareConstants.DOCTOR_STATUS_IN_OPERATION -> "In Operation";
-            case HealthCareConstants.DOCTOR_STATUS_ON_BREAK     -> "On Break";
-            case HealthCareConstants.DOCTOR_STATUS_ON_LEAVE     -> "On Leave";
-            case HealthCareConstants.DOCTOR_STATUS_BUSY         -> "Busy with Patient";
-            case HealthCareConstants.DOCTOR_STATUS_OFF_DUTY     -> "Off Duty";
-            default                                             -> "Not Available";
+            case HealthCareConstants.DOCTOR_STATUS_AVAILABLE    -> " Available";
+            case HealthCareConstants.DOCTOR_STATUS_IN_OPERATION -> " In Operation";
+            case HealthCareConstants.DOCTOR_STATUS_ON_BREAK     -> " On Break";
+            case HealthCareConstants.DOCTOR_STATUS_ON_LEAVE     -> " On Leave";
+            case HealthCareConstants.DOCTOR_STATUS_BUSY         -> " Busy with Patient";
+            case HealthCareConstants.DOCTOR_STATUS_OFF_DUTY     -> " Off Duty";
+            default -> " NOt Available";
         };
     }
 
-//    @Override
-//    public DoctorScheduleResponse createDoctorSchedule(Long doctorId, DoctorScheduleRequest request) {
-//        if (request.getOperationName() == null || request.getOperationName().trim().isEmpty()) {
-//            throw new IllegalArgumentException("Operation name cannot be null or empty");
-//        }
-//
-//        if (request.getOperationDate() == null || request.getOperationDate().trim().isEmpty()) {
-//            throw new IllegalArgumentException("Operation date cannot be null or empty");
-//        }
-//        try {
-//            LocalDate.parse(request.getOperationDate());
-//        } catch (DateTimeParseException e) {
-//            throw new IllegalArgumentException("Invalid date format. Use yyyy-MM-dd");
-//        }
-//
-//        Doctor doctor = doctorRepository.findById(doctorId)
-//                .orElseThrow(() ->
-//                        new DoctorNotFoundException(HealthCareConstants.DOCTORNOTFOUND+ " " + doctorId));
-//
-//        Patient patient = patientRepository.findById(request.getPatientId())
-//                .orElseThrow(() ->
-//                        new DoctorNotFoundException(HealthCareConstants.PATIENTNOTFOUND + request.getPatientId()));
-//
-//        DoctorSchedule schedule = new DoctorSchedule();
-//
-//        schedule.setDoctor(doctor);
-//        schedule.setPatient(patient);
-//        schedule.setOperationName(request.getOperationName());
-//        schedule.setOperationDate(request.getOperationDate());
-//        schedule.setStatus(HealthCareConstants.SCHEDULED);
-//        boolean exists = doctorScheduleRepository.existsByDoctor_IdAndPatient_IdAndOperationDate(
-//                        doctorId,
-//                        request.getPatientId(),
-//                        request.getOperationDate());
-//
-//        if (exists) {
-//            throw new IllegalArgumentException("Schedule already exists for this doctor, patient and date");
-//        }
-//
-//        doctorScheduleRepository.save(schedule);
-//
-//        return doctorScheduleRepository.findSchedulesByDoctorId(doctorId)
-//                .stream()
-//                .filter(s -> s.getScheduleId().equals(schedule.getId()))
-//                .findFirst()
-//                .orElseThrow(() ->
-//                        new RuntimeException("Schedule creation failed"));
-//    }
-@Override
-public DoctorScheduleResponse createDoctorSchedule(Long doctorId, DoctorScheduleRequest request) {
+    @Override
+    public DoctorScheduleResponse createDoctorSchedule(Long doctorId, DoctorScheduleRequest request) {
 
         Doctor doctor = doctorRepository.findById(doctorId)
                 .orElseThrow(() ->
-                        new DoctorNotFoundException(HealthCareConstants.DOCTORNOTFOUND + " " + doctorId));
-    if (request.getOperationName() == null || request.getOperationName().trim().isEmpty()) {
-        return null;
+                        new DoctorNotFoundException(HealthCareConstants.DOCTORNOTFOUND+ " " + doctorId));
+
+        Patient patient = patientRepository.findById(request.getPatientId())
+                .orElseThrow(() ->
+                        new DoctorNotFoundException(HealthCareConstants.PATIENTNOTFOUND + request.getPatientId()));
+
+        DoctorSchedule schedule = new DoctorSchedule();
+
+        schedule.setDoctor(doctor);
+        schedule.setPatient(patient);
+        schedule.setOperationName(request.getOperationName());
+        schedule.setOperationDate(request.getOperationDate());
+        schedule.setStatus(HealthCareConstants.SCHEDULED);
+
+        doctorScheduleRepository.save(schedule);
+
+        return doctorScheduleRepository.findSchedulesByDoctorId(doctorId)
+                .stream()
+                .filter(s -> s.getScheduleId().equals(schedule.getId()))
+                .findFirst()
+                .orElseThrow(() ->
+                        new RuntimeException("Schedule creation failed"));
     }
-
-    if (request.getOperationDate() == null || request.getOperationDate().trim().isEmpty()) {
-        return null;
-    }
-
-    try {
-        LocalDate.parse(request.getOperationDate());
-    } catch (DateTimeParseException e) {
-        return null;
-    }
-
-    Doctor doctor = doctorRepository.findById(doctorId).orElse(null);
-
-    if (doctor == null) {
-        return null;
-    }
-
-    Patient patient = patientRepository.findById(request.getPatientId()).orElse(null);
-
-    if (patient == null) {
-        return null;
-    }
-
-    boolean exists = doctorScheduleRepository
-            .existsByDoctor_IdAndPatient_IdAndOperationDate(
-                    doctorId,
-                    request.getPatientId(),
-                    request.getOperationDate());
-
-    if (exists) {
-        return null;
-    }
-
-    DoctorSchedule schedule = new DoctorSchedule();
-
-    schedule.setDoctor(doctor);
-    schedule.setPatient(patient);
-    schedule.setOperationName(request.getOperationName());
-    schedule.setOperationDate(request.getOperationDate());
-    schedule.setStatus("SCHEDULED");
-
-    doctorScheduleRepository.save(schedule);
-
-    return doctorScheduleRepository.findSchedulesByDoctorId(doctorId)
-            .stream()
-            .filter(s -> s.getScheduleId().equals(schedule.getId()))
-            .findFirst()
-            .orElse(null);
-}
     @Override
     public List<DoctorScheduleResponse> getDoctorSchedules(Long doctorId) {
 
@@ -617,14 +488,13 @@ public DoctorScheduleResponse createDoctorSchedule(Long doctorId, DoctorSchedule
 
         return doctorScheduleRepository.findSchedulesByDoctorId(doctorId);
     }
-
     @Override
     public DoctorScheduleResponse updateDoctorScheduleStatus(Long scheduleId, String status) {
 
         DoctorSchedule schedule = doctorScheduleRepository.findById(scheduleId)
                 .orElseThrow(() ->
                         new DoctorNotFoundException("Doctor Schedule not found with id: " + scheduleId));
-        if (!status.equalsIgnoreCase(HealthCareConstants.SCHEDULED) &&
+        if(!status.equalsIgnoreCase(HealthCareConstants.SCHEDULED) &&
                 !status.equalsIgnoreCase(HealthCareConstants.ONGOING) &&
                 !status.equalsIgnoreCase(HealthCareConstants.COMPLETED) &&
                 !status.equalsIgnoreCase(HealthCareConstants.FAILED)) {
@@ -642,6 +512,26 @@ public DoctorScheduleResponse createDoctorSchedule(Long doctorId, DoctorSchedule
                 .findFirst()
                 .orElseThrow(() ->
                         new UserNotFoundException("Schedule update failed"));
+    }
+
+
+    @Override
+    public ApiResponse<List<DoctorSearchResponse>> searchDoctors(String name) {
+
+        // Edge Case 1: Empty name
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    HealthCareConstants.INVALID_DOCTOR_NAME);
+        }
+
+        List<DoctorSearchResponse> doctors =
+                doctorRepository.searchDoctorsByName(name);
+
+        return ApiResponse.<List<DoctorSearchResponse>>builder()
+                .status(HealthCareConstants.SUCCESS)
+                .message(HealthCareConstants.DOCTOR_FETCHED_SUCCESS)
+                .data(doctors)
+                .build();
     }
 
 }

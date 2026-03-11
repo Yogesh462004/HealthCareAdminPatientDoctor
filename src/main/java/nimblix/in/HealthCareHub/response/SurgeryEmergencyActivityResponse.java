@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class SurgeryEmergencyActivityResponse {
 
-    private LocalDate date;
+    private String date;
     private Long surgeries;
     private Long emergencies;
 

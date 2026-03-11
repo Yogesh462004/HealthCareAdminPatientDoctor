@@ -2,11 +2,13 @@ package nimblix.in.HealthCareHub.service;
 
 import nimblix.in.HealthCareHub.response.*;
 
+import java.util.List;
+
 public interface DashboardService {
-    DashboardSummaryResponse getDashboardSummary();
-    AdmissionDischargeChartResponse getAdmissionsDischargesActivity();
-    SpecializationDistributionChartResponse getSpecializationDistribution();
-    SurgeryEmergencyChartResponse getSurgeriesEmergenciesActivity();
-    HospitalOverviewTableResponse getHospitalOverview();
+    ApiResponse<DashboardSummaryResponse> getDashboardSummary();
+    ApiResponse<List<AdmissionDischargeActivityResponse>> getAdmissionsDischargesActivity();
+    ApiResponse<List<SpecializationDistributionResponse>> getSpecializationsDistribution();
+    ApiResponse<List<SurgeryEmergencyActivityResponse>> getSurgeriesEmergenciesActivity();
+    ApiResponse<List<HospitalOverviewResponse>> getHospitalOverview();
 
 }
