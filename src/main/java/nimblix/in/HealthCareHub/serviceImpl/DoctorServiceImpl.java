@@ -472,4 +472,24 @@ public class DoctorServiceImpl implements DoctorService {
                         new UserNotFoundException("Schedule update failed"));
     }
 
+    @Override
+    public String login(DoctorRegistrationRequest request) {
+        return "";
+    }
+
+    @Override
+    public void logout(Long doctorId) {
+
+    }
+
+    @Override
+    public String doctorSignIn(DoctorRegistrationRequest request) {
+        return "";
+    }
+
+    @Override
+    public void logout() {
+
+    }
+
 }

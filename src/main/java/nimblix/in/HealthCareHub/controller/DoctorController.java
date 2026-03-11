@@ -273,5 +273,28 @@ public class DoctorController {
         result.put(HealthCareConstants.DATA, response);
         return ResponseEntity.ok(result);
     }
+    @PostMapping("/signin")
+    public ResponseEntity<?> doctorSignIn(@RequestBody DoctorRegistrationRequest request) {
+
+        String token = doctorService.login(request);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("status", HttpStatus.CREATED.value());
+        response.put("message", "Doctor login successful");
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/signout")
+    public ResponseEntity<?> doctorSignOut() {
+
+        doctorService.logout();
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("status", HttpStatus.CREATED.value());
+        response.put("message", "Doctor logout successful");
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
 
 }
