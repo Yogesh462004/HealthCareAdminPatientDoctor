@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface DoctorService {
+
     String registerDoctor(DoctorRegistrationRequest request);
     DoctorProfileResponse getDoctorProfile(Long doctorId);
     ResponseEntity<?> getDoctorDetails(Long doctorId, Long hospitalId);
@@ -35,6 +36,15 @@ public interface DoctorService {
 
     ApiResponse<List<DoctorSearchResponse>> searchDoctors(String name);
     DoctorScheduleResponse updateDoctorScheduleStatus(Long scheduleId, String status);
+
+    String login(DoctorRegistrationRequest request);
+
+    void logout(Long doctorId);
+
+    String doctorSignIn(DoctorRegistrationRequest request);
+
+    void logout();
+}
     Object updateDoctor(Long doctorId, Map<String,Object>updates);
 
 

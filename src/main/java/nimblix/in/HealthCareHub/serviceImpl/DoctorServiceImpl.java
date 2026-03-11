@@ -476,6 +476,23 @@ public class DoctorServiceImpl implements DoctorService {
     }
 
     @Override
+    public String login(DoctorRegistrationRequest request) {
+        return "";
+    }
+
+    @Override
+    public void logout(Long doctorId) {
+
+    }
+
+    @Override
+    public String doctorSignIn(DoctorRegistrationRequest request) {
+        return "";
+    }
+
+    @Override
+    public void logout() {
+
     public Object updateDoctor(Long doctorId, Map<String, Object> updates) {
         Doctor doctor = doctorRepository.findById(doctorId)
                 .orElseThrow(() -> new IllegalArgumentException(
