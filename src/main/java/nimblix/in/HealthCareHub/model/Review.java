@@ -18,6 +18,7 @@ public class Review {
     private Long id;
 
     private Integer rating;
+
     private String comment;
 
     @ManyToOne
@@ -28,7 +29,12 @@ public class Review {
     @JoinColumn(name = "doctor_id")
     private Doctor doctor;
 
+    @ManyToOne
+    @JoinColumn(name = "hospital_id")
+    private Hospital hospital;
+
     private String createdTime;
+
     private String updatedTime;
 
     @PrePersist

@@ -3,8 +3,10 @@ package nimblix.in.HealthCareHub.model;
 import jakarta.persistence.*;
 import lombok.*;
 import nimblix.in.HealthCareHub.utility.HealthCareUtil;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "patients")
@@ -20,9 +22,13 @@ public class Patient {
     private Long id;
 
     private String name;
+
     private Integer age;
+
     private String gender;
+
     private String phone;
+
     private String disease;
 
     @Column(name = "admission_date")
@@ -49,7 +55,16 @@ public class Patient {
     private Hospital hospital;
 
 
+    @Column(name = "is_deleted")
+    private Boolean isDeleted = false;
+
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Review> reviews;
+
+
     private String createdTime;
+
     private String updatedTime;
 
     @PrePersist
