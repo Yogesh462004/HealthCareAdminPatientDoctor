@@ -231,6 +231,8 @@ public class DoctorController {
 
         return ResponseEntity.ok(response);
     }
+   
+    //Doctor signin
     @PostMapping("/signin")
     public ResponseEntity<?> doctorSignIn(@RequestBody DoctorRegistrationRequest request) {
 
@@ -242,7 +244,7 @@ public class DoctorController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-
+//sign out
     @PostMapping("/signout")
     public ResponseEntity<?> doctorSignOut() {
 
