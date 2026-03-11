@@ -76,19 +76,7 @@ public class DoctorController {
         return doctorService.deleteDoctorDetails(doctorId);
     }
 
-    //  - Get Doctor by ID with edge cases
-    @GetMapping("/{doctorId}")
-    public ResponseEntity<Map<String, Object>> getDoctorById(@PathVariable Long doctorId) {
 
-        DoctorProfileResponse doctor = doctorService.getDoctorById(doctorId);
-
-        Map<String, Object> result = new LinkedHashMap<>();
-        result.put(HealthCareConstants.STATUS, HttpStatus.OK.value());
-        result.put(HealthCareConstants.MESSAGE, HealthCareConstants.DOCTOR_FETCHED_SUCCESSFULLY);
-        result.put(HealthCareConstants.DATA_KEY, doctor);
-
-        return ResponseEntity.ok(result);
-    }
 
     @GetMapping("/{doctorId}/reviews")
     public ResponseEntity<Map<String, Object>> getDoctorReviews(

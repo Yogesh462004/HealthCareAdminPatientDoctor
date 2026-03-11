@@ -42,28 +42,27 @@ public class SecurityConfig {
                                 ("/doctor/search"),
                                 "/api/filter/**",
                                 "/api/dashboard/**",
-<<<<<<< HEAD
+
                                 "/api/patients/register/**",
                                 "/api/patients/forgot-password",
-                                "/api/patients/reset-password"
-=======
+                                "/api/patients/reset-password",
+
 
 
                                 "/api/medicines/**",
 
 
                                 "/swagger-ui.html",
-                                "/doctor/**",
-                                "/api/hospital/**",
-                                "/api/auth/**"
->>>>>>> 71b42cf (20Api's completed)
-                        ).permitAll()
+                                "/doctor/**"
+                                ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
+
 
     @Bean
     public AuthenticationManager authenticationManager(

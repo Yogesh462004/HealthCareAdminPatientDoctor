@@ -144,47 +144,6 @@ public class DoctorServiceImpl implements DoctorService {
                 );
     }
 
-    @Override
-    public DoctorProfileResponse getDoctorById(Long doctorId) {
-
-        // Edge case 1: null or negative ID
-        if (doctorId == null || doctorId <= 0) {
-            throw new IllegalArgumentException("Doctor ID cannot be 0 or Negative");
-        }
-
-        // Edge case 2: Doctor not found
-        Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new DoctorNotFoundException("Doctor not found with ID: " + doctorId));
-
-        // Edge case 3: Doctor is inactive / soft deleted
-        if (HealthCareConstants.IN_ACTIVE.equals(doctor.getIsActive())) {
-            throw new DoctorNotFoundException("Doctor with ID " + doctorId + " is no longer active.");
-        }
-
-        // Map entity → DTO (password excluded for security)
-        return DoctorProfileResponse.builder()
-                .doctorId(doctor.getId())
-                .name(doctor.getName())
-                .experienceYears(doctor.getExperienceYears())
-                .phone(doctor.getPhone())
-                .email(doctor.getEmailId())
-                .qualification(doctor.getQualification())
-
-                // specialization details
-                .specializationId(doctor.getSpecialization().getId())
-                .specializationName(doctor.getSpecialization().getName())
-
-                // hospital details
-                .hospitalId(doctor.getHospital().getId())
-                .hospitalName(doctor.getHospital().getName())
-                .hospitalAddress(doctor.getHospital().getAddress())
-                .hospitalCity(doctor.getHospital().getCity())
-                .hospitalState(doctor.getHospital().getState())
-                .hospitalPhone(doctor.getHospital().getPhone())
-                .hospitalEmail(doctor.getHospital().getEmail())
-                .hospitalTotalBeds(doctor.getHospital().getTotalBeds())
-                .build();
-    }
 
     @Override
     public DoctorReviewResponse getDoctorReviews(Long doctorId) {

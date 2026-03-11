@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class AdmissionDischargeActivityResponse {
 
-    private String date;
+    private LocalDate date;
     private Long admissions;
     private Long discharges;
 
