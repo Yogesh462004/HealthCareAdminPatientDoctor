@@ -21,7 +21,6 @@ public class Review {
 
     private String comment;
 
-    // Patient who wrote the review
     @ManyToOne
     @JoinColumn(name = "patient_id")
     private Patient patient;

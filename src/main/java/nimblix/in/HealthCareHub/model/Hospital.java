@@ -35,21 +35,18 @@ public class Hospital {
 
     private Integer totalBeds;
 
-    // Used for sorting hospitals by rating
     private Double rating;
 
-    // Used for sorting hospitals by number of doctors
     private Integer doctorCount;
 
     @Column(name="is_active")
     private Boolean isActive;
 
-    // Hospital Reviews
     @OneToMany(mappedBy = "hospital", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Review> reviews;
 
-    // Hospital Rooms
+
     @ElementCollection
     @CollectionTable(
             name = "hospital_rooms",
@@ -63,7 +60,6 @@ public class Hospital {
     @Column(name = "updated_time")
     private String updatedTime;
 
-    // Mandatory password
     @Column(nullable = false)
     private String password;
 

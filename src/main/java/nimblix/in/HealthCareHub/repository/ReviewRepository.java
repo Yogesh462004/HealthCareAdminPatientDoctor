@@ -12,10 +12,9 @@ import java.util.List;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
-    // Get doctor rating statistics (average rating + total reviews)
     @Query("""
         SELECT new nimblix.in.HealthCareHub.response.DoctorReviewResponse(
-            COALESCE(AVG(r.rating),0),
+            COALESCE(AVG(r.rating), 0),
             COUNT(r)
         )
         FROM Review r
@@ -24,7 +23,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     DoctorReviewResponse findReviewStatsByDoctorId(@Param("doctorId") Long doctorId);
 
 
-    // Get patient reviews by hospital
     @Query("""
         SELECT new nimblix.in.HealthCareHub.response.ReviewResponse(
             r.id,

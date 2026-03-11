@@ -31,30 +31,27 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
 
-
                                 "/auth/**",
                                 "/api/auth/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/patients/**",
+                                "/api/patients/**",
+                                "/api/patient/**",
                                 "/api/doctors/**",
                                 "/api/hospital/**",
                                 "/api/filter/**",
                                 "/api/dashboard/**",
-                                "/api/patient/**",
                                 "/api/patient/*/doctors/*/review",
                                 "/api/patient/doctors/*/reviews",
                                 "/api/patient/*/hospitals/*/review",
                                 "/api/patient/hospitals/*/reviews",
                                 "/api/patient/*/review-by-doctor/*",
-                                "/api/patient/*/reviews"
-                                "/api/patient/**",
-                                "/api/auth/**",
-                                ("/doctor/search"),
-                                "/api/filter/**",
-                                "/api/dashboard/**",
+                                "/api/patient/*/reviews",
+                                "/doctor/search",
                                 "/api/patients/register/**"
+
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

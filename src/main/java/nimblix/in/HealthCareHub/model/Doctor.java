@@ -39,16 +39,14 @@ public class Doctor {
 
     private Double consultationFee;
 
-    // ⭐ Doctor Average Rating
     @Column(name = "average_rating")
     private Double averageRating = 0.0;
 
-    // Doctor Login Account
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;
 
-    // Many Doctors → One Hospital
+
     @ManyToOne
     @JoinColumn(name = "hospital_id", nullable = false)
     private Hospital hospital;
@@ -56,16 +54,15 @@ public class Doctor {
     @Column(name = "is_active")
     private String isActive;
 
-    // Many Doctors → One Specialization
     @ManyToOne
     @JoinColumn(name = "specialization_id", nullable = false)
     private Specialization specialization;
 
-    // ⭐ Doctor Status (AVAILABLE / BUSY / ON_BREAK)
+
     @Column(name = "doctor_status", nullable = false)
     private String doctorStatus = HealthCareConstants.DOCTOR_STATUS_AVAILABLE;
 
-    // ⭐ Doctor Reviews
+
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Review> reviews;

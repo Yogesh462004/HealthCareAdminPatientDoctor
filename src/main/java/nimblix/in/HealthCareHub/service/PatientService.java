@@ -13,39 +13,34 @@ import java.util.List;
 
 public interface PatientService {
 
-    // Patient Registration
+
     PatientRegistrationResponse registerPatient(PatientRegistrationRequest request);
 
-    // Prescription APIs
+
     PrescriptionResponse<Prescription> getPrescription(Long id);
 
     PrescriptionMedicineResponse<PrescriptionMedicines> getPrescriptionMedicines(Long prescriptionId);
 
-    // Patient Management
-    Patient savePatient(Patient patient);
 
+    Patient savePatient(Patient patient);
 
     String softDeletePatient(Long id);
 
-    // Doctor Review APIs
-
-   // String softDeletePatient(Long id);
 
     Review addDoctorReview(Long patientId, Long doctorId, String comment, int rating);
 
     List<Review> getDoctorReviews(Long doctorId);
 
-    // Patient Review by Doctor
+
     Review addPatientReview(Long doctorId, Long patientId, String comment, int rating);
 
     List<Review> getPatientReviews(Long patientId);
 
-    List<Patient> filterPatientsByDay(int day);
-    List<Patient> filterPatientsByMonth(int month);
-    List<Patient> filterPatientsByYear(int year);
-}
-
-
     Review addHospitalReview(Long patientId, Long hospitalId, String comment, int rating);
 
+    List<Patient> filterPatientsByDay(int day);
+
+    List<Patient> filterPatientsByMonth(int month);
+
+    List<Patient> filterPatientsByYear(int year);
 }
