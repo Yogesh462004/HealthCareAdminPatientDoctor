@@ -28,7 +28,7 @@ public class DoctorSchedule {
 
     private String operationName;
 
-    private LocalDate operationDate;
+    private String operationDate;
     private String status;
 
 }
