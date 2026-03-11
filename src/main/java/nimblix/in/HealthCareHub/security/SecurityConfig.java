@@ -39,8 +39,12 @@ public class SecurityConfig {
                                 "/api/hospital/**",
                                 "/api/patient/**",
                                 "/api/auth/**",
+                                ("/doctor/search"),
                                 "/api/filter/**",
-                                "/api/dashboard/**"
+                                "/api/dashboard/**",
+                                "/api/patients/register/**",
+                                "/api/patients/forgot-password",
+                                "/api/patients/reset-password"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
