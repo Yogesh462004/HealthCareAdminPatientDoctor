@@ -207,6 +207,21 @@ public class DoctorController {
         result.put(HealthCareConstants.MESSAGE, message);
         return ResponseEntity.ok(result);
     }
+    @GetMapping("/availability")
+    public ResponseEntity<Map<String, Object>> getDoctorAvailability() {
+
+        List<DoctorAvailabilityResponse> availabilityList =
+                doctorService.getAllAvailableDoctors();
+
+        Map<String, Object> response = new LinkedHashMap<>();
+
+        response.put("status", HttpStatus.OK.value());
+        response.put("message", "Doctor availability fetched successfully");
+        response.put("count", availabilityList.size());
+        response.put("data", availabilityList);
+
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping("/{doctorId}/availability")
     public ResponseEntity<Map<String, Object>> getDoctorAvailability(

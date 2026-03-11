@@ -248,7 +248,7 @@ System.out.println(doctorRepository.searchDoctorByName(name));
 
         return availabilityList.stream()
                 .map(availability -> DoctorAvailabilityResponse.builder()
-                        .id(availability.getId())
+                        .slotId(availability.getId())
                         .doctorId(availability.getDoctor().getId())
                         .doctorName(availability.getDoctor().getName())
                         .availableDate(availability.getAvailableDate())
