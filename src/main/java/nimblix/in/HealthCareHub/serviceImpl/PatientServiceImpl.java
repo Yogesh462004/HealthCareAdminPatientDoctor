@@ -3,6 +3,7 @@ package nimblix.in.HealthCareHub.serviceImpl;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import nimblix.in.HealthCareHub.constants.HealthCareConstants;
+import nimblix.in.HealthCareHub.response.ApiResponse;
 import nimblix.in.HealthCareHub.model.*;
 import nimblix.in.HealthCareHub.repository.*;
 import nimblix.in.HealthCareHub.request.PatientRegistrationRequest;
@@ -96,18 +97,27 @@ public class PatientServiceImpl implements PatientService {
         }
     }
 
-    public String softDeletePatient(Long id) {
-        Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+    @Override
+    public boolean softDeletePatient(Long id) {
 
-//        patient.setDeleted();   //  Mark as deleted
-        patientRepository.save(patient);
+        Optional<Patient> optionalPatient = patientRepository.findById(id);
 
-        return "Patient soft deleted successfully";
+        if(optionalPatient.isPresent()) {
+
+            Patient patient = optionalPatient.get();
+
+            patient.setDeleted(true);   // soft delete flag
+
+            patientRepository.save(patient);
+
+            return true;
+        }
+
+        return false;
     }
 
+    @Override
     public Patient savePatient(Patient patient) {
-        // TODO Auto-generated method stub
         return patientRepository.save(patient);
     }
 
@@ -181,4 +191,90 @@ public class PatientServiceImpl implements PatientService {
         return null;
     }
 
+    @Override
+    public List<Patient> filterPatientsByDay(int day) {
+        return patientRepository.findPatientsByDay(day);
+    }
+
+    @Override
+    public List<Patient> filterPatientsByMonth(int month) {
+        return patientRepository.findPatientsByMonth(month);
+    }
+
+    @Override
+    public List<Patient> filterPatientsByYear(int year) {
+        return patientRepository.findPatientsByYear(year);
+    }
+
+    @Override
+    public ApiResponse forgotPassword(String phoneNumber, String email) {
+
+        ApiResponse response = new ApiResponse();
+
+        Optional<User> userOptional;
+
+        if (phoneNumber != null && !phoneNumber.isEmpty()) {
+            userOptional = userRepository.findByPhoneNumber(phoneNumber);
+        } else if (email != null && !email.isEmpty()) {
+            userOptional = userRepository.findByEmail(email);
+        } else {
+            response.setStatus("FAILURE");
+            response.setMessage("Phone number or email required");
+            return response;
+        }
+
+        if (!userOptional.isPresent()) {
+            response.setStatus("FAILURE");
+            response.setMessage("User not found");
+            return response;
+        }
+
+        response.setStatus("SUCCESS");
+        response.setMessage("User verified. You can reset password.");
+
+        return response;
+    }
+    @Override
+    public ApiResponse resetPassword(String phoneNumber, String email, String newPassword) {
+
+        ApiResponse response = new ApiResponse();
+
+        // Check password
+        if (newPassword == null || newPassword.isEmpty()) {
+            response.setStatus("FAILURE");
+            response.setMessage("New password required");
+            return response;
+        }
+
+        Optional<User> userOptional;
+
+        // Check user by phone or email
+        if (phoneNumber != null && !phoneNumber.isEmpty()) {
+            userOptional = userRepository.findByPhoneNumber(phoneNumber);
+        } else if (email != null && !email.isEmpty()) {
+            userOptional = userRepository.findByEmail(email);
+        } else {
+            response.setStatus("FAILURE");
+            response.setMessage("Phone number or email required");
+            return response;
+        }
+
+        // User not found
+        if (!userOptional.isPresent()) {
+            response.setStatus("FAILURE");
+            response.setMessage("User not found");
+            return response;
+        }
+
+        // Update password
+        User user = userOptional.get();
+        user.setPassword(newPassword);
+
+        userRepository.save(user);
+
+        response.setStatus("SUCCESS");
+        response.setMessage("Password reset successfully");
+
+        return response;
+    }
 }

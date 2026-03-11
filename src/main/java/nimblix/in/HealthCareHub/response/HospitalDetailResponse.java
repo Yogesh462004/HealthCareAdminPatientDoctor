@@ -11,9 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class HospitalDetailResponse {
 
-    private String status;
-    private String message;
-
     private Long id;
     private String name;
     private String address;

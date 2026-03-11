@@ -1,10 +1,13 @@
 package nimblix.in.HealthCareHub.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import nimblix.in.HealthCareHub.constants.HealthCareConstants;
 import nimblix.in.HealthCareHub.model.Doctor;
+import nimblix.in.HealthCareHub.request.DoctorAddRequest;
 import nimblix.in.HealthCareHub.request.DoctorRegistrationRequest;
 import nimblix.in.HealthCareHub.request.DoctorScheduleRequest;
+import nimblix.in.HealthCareHub.response.DoctorSearchResponse;
 import nimblix.in.HealthCareHub.response.*;
 import nimblix.in.HealthCareHub.service.DoctorService;
 import org.springframework.http.HttpStatus;
@@ -30,7 +33,19 @@ public class DoctorController {
     public ResponseEntity<ApiResponse<DoctorListResponse>> getDoctorsByHospital(@PathVariable Long hospitalId) {
         DoctorListResponse response = doctorService.getDoctorsByHospitalId(hospitalId);
         return ResponseEntity.ok(new ApiResponse<>("200", "Doctors fetched successfully", response));
+
+    // Add a new doctor under hospital
+    @PostMapping("/addDoctor")
+    public ResponseEntity<ApiResponse<DoctorProfileResponse>> addDoctor(
+            @RequestBody DoctorAddRequest request){
+
+        ApiResponse<DoctorProfileResponse> response =
+                doctorService.addDoctor(request);
+
+        return ResponseEntity.ok(response);
     }
+
+
 
     @GetMapping("/getDoctorDetails/{doctorId}/{hospitalId}")
     public ResponseEntity<?> getDoctorDetails(@PathVariable Long doctorId,
@@ -61,6 +76,7 @@ public class DoctorController {
         return ResponseEntity.ok(new ApiResponse<>("200", HealthCareConstants.DOCTOR_FETCHED_SUCCESSFULLY, doctor));
     }
 
+
     @GetMapping("/{doctorId}/reviews")
     public ResponseEntity<ApiResponse<DoctorReviewResponse>> getDoctorReviews(
             @PathVariable Long doctorId) {
@@ -78,9 +94,12 @@ public class DoctorController {
 
     @GetMapping("/search")
     public ResponseEntity<?> searchDoctor(@RequestParam String name) {
+   /* @GetMapping("/search")
+    public ResponseEntity<?> searchDoctor(@RequestParam String name){
         return ResponseEntity.ok(doctorService.searchDoctorByName(name));
-    }
+    } */
 
+    // Filter doctors by specialization
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse<Object>> filterDoctorsBySpecialization(
             @RequestParam(required = false) String specialization) {
@@ -98,6 +117,13 @@ public class DoctorController {
         }
 
         return ResponseEntity.ok(new ApiResponse<>("200", HealthCareConstants.DOCTORS_FEATCHED_SUCCESSFULLY, doctors));
+    public ResponseEntity<ApiResponse<List<DoctorFilterResponse>>> filterDoctorsBySpecialization(
+            @RequestParam String specialization){
+
+        ApiResponse<List<DoctorFilterResponse>> response =
+                doctorService.filterDoctorsBySpecialization(specialization);
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/availability")
@@ -121,6 +147,20 @@ public class DoctorController {
         return ResponseEntity.ok(new ApiResponse<>("200", "Doctors fetched successfully", doctors));
     }
 
+    // Retrieve doctors by hospital
+    // Get doctors by hospital
+    @GetMapping("/hospitals/{id}/doctors")
+    public ResponseEntity<ApiResponse<List<DoctorSummaryResponse>>>
+    getDoctorsByHospital(@PathVariable Long id) {
+
+        ApiResponse<List<DoctorSummaryResponse>> response =
+                doctorService.getDoctorsByHospitalId(id);
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    // setting that doctor status put/api/doctors/{doctorId}/status?status=IN_OPERATION
     @PutMapping("/{doctorId}/status")
     public ResponseEntity<ApiResponse<Object>> updateDoctorStatus(
             @PathVariable Long doctorId,
@@ -181,4 +221,15 @@ public class DoctorController {
         Object updatedDoctor = doctorService.updateDoctor(doctorId, updates);
         return ResponseEntity.ok(new ApiResponse<>("200", "Doctor updated successfully", updatedDoctor));
     }
+    // Search Doctors by Name
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<DoctorSearchResponse>>> searchDoctors(
+            @RequestParam String name){
+
+        ApiResponse<List<DoctorSearchResponse>> response =
+                doctorService.searchDoctors(name);
+
+        return ResponseEntity.ok(response);
+    }
+
 }

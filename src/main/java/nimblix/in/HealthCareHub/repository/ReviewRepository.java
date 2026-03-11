@@ -22,16 +22,17 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     DoctorReviewResponse findReviewStatsByDoctorId(@Param("doctorId") Long doctorId);
 
     @Query("""
-        SELECT new nimblix.in.HealthCareHub.response.ReviewResponse(
-         r.id,
-         r.patient.name,
-         r.rating,
-         r.comment,
-         r.createdTime
-        )
-        FROM Review r
-        WHERE r.patient.hospital.id = :hospitalId
-    """)
-    List<ReviewResponse> findPatientReviewsByHospitalId(@Param("hospitalId") Long hospitalId);
+            SELECT new nimblix.in.HealthCareHub.response.ReviewResponse(
+            r.id,
+            r.patient.name,
+            r.rating,
+            r.comment,
+            r.createdTime
+           )
+            FROM Review r
+            WHERE r.patient.hospital.id = :hospitalId
+           """)
+    List<ReviewResponse>findPatientReviewsByHospitalId( @Param("hospitalId") Long hospitalId);
+
 
 }

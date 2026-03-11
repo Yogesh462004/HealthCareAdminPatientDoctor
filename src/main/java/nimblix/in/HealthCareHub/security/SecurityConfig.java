@@ -39,15 +39,30 @@ public class SecurityConfig {
                                 "/api/hospital/**",
                                 "/api/patient/**",
                                 "/api/auth/**",
+                                ("/doctor/search"),
                                 "/api/filter/**",
-                                "/api/dashboard/**"
-                        ).permitAll()
+                                "/api/dashboard/**",
+
+                                "/api/patients/register/**",
+                                "/api/patients/forgot-password",
+                                "/api/patients/reset-password",
+
+
+
+                                "/api/medicines/**",
+
+
+                                "/swagger-ui.html",
+                                "/doctor/**"
+                                ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
+
 
     @Bean
     public AuthenticationManager authenticationManager(

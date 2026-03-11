@@ -7,6 +7,7 @@ import nimblix.in.HealthCareHub.request.HospitalRegistrationRequest;
 import nimblix.in.HealthCareHub.request.MedicineAddRequest;
 import nimblix.in.HealthCareHub.response.*;
 import nimblix.in.HealthCareHub.service.HospitalService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,11 +21,18 @@ public class HospitalController {
 
     private final HospitalService hospitalService;
 
-    @PostMapping("/register")
-    public String registerHospital(
-            @RequestBody HospitalRegistrationRequest request) {
 
-        return hospitalService.registerHospital(request);
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<Long>> registerHospital(@RequestBody HospitalRegistrationRequest request) {
+        Long hospitalId = hospitalService.registerHospital(request);
+
+        ApiResponse<Long> response = ApiResponse.<Long>builder()
+                .status(HealthCareConstants.STATUS_SUCCESS)
+                .message(HealthCareConstants.REGISTER_SUCCESS)
+                .data(hospitalId)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     //Authenticate hospital admin using login credentials.
@@ -32,13 +40,16 @@ public class HospitalController {
     public ResponseEntity<HospitalLoginResponse> loginHospital(@RequestBody HospitalLoginRequest request) {
         String token = hospitalService.loginHospital(request);
 
-        HospitalLoginResponse response = HospitalLoginResponse.builder()
+        HospitalLoginResponse response = HospitalLoginResponse  .builder()
+                .status(HealthCareConstants.STATUS_SUCCESS)
+                .message("Login successful")
                 .token(token)
-                .message(HealthCareConstants.LOGIN_SUCCESS)
                 .build();
 
         return ResponseEntity.ok(response);
     }
+
+
 
     @PostMapping("/medicine/add")
     public String addMedicine(@RequestBody MedicineAddRequest request){
@@ -71,76 +82,107 @@ public class HospitalController {
         return hospitalService.getAvailableRooms(hospitalId);
     }
 
-    //Retrieve the list of all hospitals available in the system.
 
-    @GetMapping
-    public ResponseEntity<List<HospitalResponse>> getAllHospitals(){
-        return ResponseEntity.ok(hospitalService.getAllHospitals());
-    }
 
-    //Fetch detailed information about a specific hospital.
+    // Fetch detailed information about a specific hospital
     @GetMapping("/{id}")
-    public ResponseEntity<HospitalDetailResponse> getHospitalById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<HospitalDetailResponse>> getHospitalById(
+            @PathVariable Long id) {
 
-        HospitalDetailResponse response = hospitalService.getHospitalById(id);
+        ApiResponse<HospitalDetailResponse> response =
+                hospitalService.getHospitalById(id);
+
         return ResponseEntity.ok(response);
     }
 
-    //Search hospitals based on hospital name
+    // Search hospitals based on hospital name
     @GetMapping("/search")
-    public ResponseEntity<List<HospitalSearchResponse>> searchHospital(
+    public ResponseEntity<ApiResponse<List<HospitalSearchResponse>>> searchHospital(
             @RequestParam("name") String name) {
 
-        List<HospitalSearchResponse> hospitals = hospitalService.searchHospitalByName(name);
-        return ResponseEntity.ok(hospitals);
-    }
+        ApiResponse<List<HospitalSearchResponse>> response =
+                hospitalService.searchHospitalByName(name);
 
-    //Retrieve key statistics of a hospital such as total beds, total doctors, patients served, and number of specializations.
-    @GetMapping("/{hospitalId}/stats")
-    public ResponseEntity<HospitalStatsResponse> getHospitalStats(
-            @PathVariable Long hospitalId) {
-
-        if (hospitalId == null) {
-            throw new IllegalArgumentException(HealthCareConstants.HOSPITAL_ID_NULL);
-        }
-        return ResponseEntity.ok(hospitalService.getHospitalStats(hospitalId));
-    }
-
-    //Sort hospitals based on rating, name, or doctor count
-    @GetMapping("/sort")
-    public ResponseEntity<HospitalSortResponse> sortHospitals(
-            @RequestParam String sortBy) {
-
-        HospitalSortResponse response = hospitalService.sortHospitals(sortBy);
         return ResponseEntity.ok(response);
     }
 
-    //Fetch list of hospitals to populate the "All Hospitals" dropdown filter in the dashboard.
-    @GetMapping("/list")
-    public ResponseEntity<DropdownListResponse> getHospitalList() {
+    // Retrieve hospital statistics
+    @GetMapping("/{hospitalId}/stats")
+    public ResponseEntity<ApiResponse<HospitalStatsResponse>> getHospitalStats(
+            @PathVariable Long hospitalId) {
 
-        DropdownListResponse response =
+        ApiResponse<HospitalStatsResponse> response =
+                hospitalService.getHospitalStats(hospitalId);
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    // Sort hospitals based on rating, name, or doctor count
+    @GetMapping("/sort")
+    public ResponseEntity<ApiResponse<List<HospitalSummaryResponse>>> sortHospitals(
+            @RequestParam String sortBy) {
+
+        ApiResponse<List<HospitalSummaryResponse>> response =
+                hospitalService.sortHospitals(sortBy);
+
+        return ResponseEntity.ok(response);
+    }
+
+    // Fetch hospital list for dashboard filter dropdown
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse<List<DropdownResponse>>> getHospitalList() {
+
+        ApiResponse<List<DropdownResponse>> response =
                 hospitalService.getHospitalList();
+
         return ResponseEntity.ok(response);
     }
 
     // Filter hospitals based on specialization
     @GetMapping("/filter")
-    public ResponseEntity<HospitalListResponse> filterHospitals(
+    public ResponseEntity<ApiResponse<List<HospitalSpecializationResponse>>> filterHospitals(
             @RequestParam String specialization) {
 
-        HospitalListResponse response =
+        ApiResponse<List<HospitalSpecializationResponse>> response =
                 hospitalService.filterHospitalsBySpecialization(specialization);
+
         return ResponseEntity.ok(response);
     }
 
-    // Get all reviews for a hospital
-    @GetMapping("/{hospitalId}/reviews")
-    public ResponseEntity<HospitalReviewListResponse> getHospitalReviews(
-            @PathVariable Long hospitalId) {
 
-        HospitalReviewListResponse response =
-                hospitalService.getHospitalReviews(hospitalId);
+
+    //Retrieve weekly activity data of a hospital including admissions,
+    // discharges, and surgeries for chart visualization.
+
+
+    @GetMapping("/{id}/weekly-activity")
+    public ResponseEntity<ApiResponse<List<WeeklyActivityResponse>>> getWeeklyActivity(
+            @PathVariable Long id) {
+
+        ApiResponse<List<WeeklyActivityResponse>> response =
+                hospitalService.getWeeklyActivity(id);
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    //Retrieve the list of all hospitals available in the system.
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<HospitalResponse>>> getAllHospitals(){
+
+        ApiResponse<List<HospitalResponse>> response = hospitalService.getAllHospitals();
+        return ResponseEntity.ok(response);
+
+    }
+
+
+    //Retrieve all patient reviews and ratings associated with a specific hospital.
+
+    @GetMapping("/{hospitalId}/reviews")
+    public ResponseEntity<ApiResponse<List<ReviewResponse>>> getHospitalReviews(@PathVariable Long hospitalId){
+
+        ApiResponse<List<ReviewResponse>> response = hospitalService.getHospitalReviews(hospitalId);
         return ResponseEntity.ok(response);
     }
 }

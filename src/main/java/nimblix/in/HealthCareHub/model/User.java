@@ -34,6 +34,9 @@ public class User {
     @Column(name = "updated_time")
     private String updatedTime;
 
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
 
     @PrePersist
     protected void onCreate(){

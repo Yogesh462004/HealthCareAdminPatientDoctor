@@ -9,9 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class DashboardSummaryResponse {
 
-    private String status;
-    private String message;
-
     private Long totalBeds;
     private Long activeDoctors;
     private Long patientsServed;
