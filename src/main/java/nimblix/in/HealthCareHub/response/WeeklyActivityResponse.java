@@ -4,15 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class HospitalOverviewTableResponse {
+public class WeeklyActivityResponse {
 
-    private String status;
-    private String message;
-    private List<HospitalOverviewResponse> data;
+    private String day;
+    private Long admissions;
+    private Long discharges;
+    private Long surgeries;
 
 }

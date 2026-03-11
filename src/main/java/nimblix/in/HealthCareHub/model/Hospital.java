@@ -35,9 +35,28 @@ public class Hospital {
 
     private Integer totalBeds;
 
+    private String country;
+
+    private Integer establishedYear;
+
+    @ElementCollection
+    private List<String> specializations;   // ✅ Add this field
+
+    @ElementCollection
+    private List<String> doctors;           // ✅ Add this field
+
+    private String aboutHospital;
+
+
+
+    private String status;
+
+    // Used for sorting hospitals by rating
     private Double rating;
 
     private Integer doctorCount;
+
+
 
     @Column(name="is_active")
     private Boolean isActive;

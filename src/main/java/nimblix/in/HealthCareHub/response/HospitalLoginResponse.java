@@ -1,14 +1,14 @@
 package nimblix.in.HealthCareHub.response;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
+@Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class HospitalLoginResponse {
 
-    private String token;
+    private String status;
     private String message;
+    private String token;
 }

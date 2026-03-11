@@ -99,4 +99,43 @@ public class HealthCareConstants {
     public static String DOCTORSCHEDULESUCCESSFULLY = "Doctor Schedule created successfully";
     public static String  SCHEDULESTATUSUPDATED= "Schedule status updated successfully";
 
+
+    public static final String NOT_FOUND = "NOT_FOUND";
+
+
+    public static final String WEEKLY_ACTIVITY_FETCHED =
+            "Weekly activity fetched successfully";
+
+    public static final String HOSPITAL_NAME_REQUIRED = "Hospital name is required";
+    public static final String INVALID_EMAIL_FORMAT = "Invalid email format";
+    public static final String PHONE_REQUIRED = "Phone number is required";
+    public static final String PASSWORD_MISMATCH = "Passwords do not match";
+    public static final String INVALID_TOTAL_BEDS = "Total beds must be greater than zero";
+    public static final String INVALID_ESTABLISHED_YEAR = "Established year is invalid";
+    public static final String HOSPITAL_ALREADY_EXISTS = "Hospital already exists at this location";
+    public static final String REGISTER_SUCCESS = "Hospital registered successfully";
+    public static final String STATUS_FAILED = "FAILED";
+
+    public static final String EMAIL_ALREADY_EXISTS = "Hospital email already registered";
+
+
+
+    public static final String INVALID_DOCTOR_NAME =
+            "Doctor name cannot be empty";
+
+    public static final String DOCTOR_FETCHED_SUCCESS =
+            "Doctors fetched successfully";
+
+
+    public static final String DOCTOR_ADDED_SUCCESS =
+            "Doctor added successfully";
+
+    public static final String HOSPITAL_STATS_FETCHED_SUCCESS =
+            "Hospital statistics fetched successfully";
+
+
+
+
+
+
 }
