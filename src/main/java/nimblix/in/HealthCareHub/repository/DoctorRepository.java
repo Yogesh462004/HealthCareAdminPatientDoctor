@@ -2,8 +2,7 @@ package nimblix.in.HealthCareHub.repository;
 
 import nimblix.in.HealthCareHub.model.Doctor;
 import nimblix.in.HealthCareHub.model.DoctorAvailability;
-import nimblix.in.HealthCareHub.response.DoctorProfileResponse;
-import nimblix.in.HealthCareHub.response.SpecializationDistributionResponse;
+import nimblix.in.HealthCareHub.response.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -17,8 +16,6 @@ public interface DoctorRepository extends JpaRepository<Doctor,Long> {
     List<Doctor> findByHospitalIdAndNameContainingIgnoreCase(Long hospitalId, String name);
     Optional<Doctor> findByEmailId(String emailId);
     Optional<Doctor> findByIdAndHospitalId(Long doctorId, Long hospitalId);
-
-
 
     @Query("""
             SELECT new nimblix.in.HealthCareHub.response.DoctorProfileResponse(
@@ -45,42 +42,27 @@ public interface DoctorRepository extends JpaRepository<Doctor,Long> {
             WHERE d.id = :doctorId
             """)
     Optional<DoctorProfileResponse> findDoctorProfileById(@Param("doctorId") Long doctorId);
-    @Query("SELECT d FROM Doctor d WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', :name, '%'))")
-    List<Doctor> searchDoctorByName(@Param("name") String name);
-    List<Doctor> findDoctorsByHospitalId(@Param("hospitalId") Long hospitalId);
+    List<Doctor> findByNameContainingIgnoreCase(String name);
     List<Doctor> findBySpecialization_NameIgnoreCase(String name);
 
-    @Query("""
-        SELECT COUNT(DISTINCT d.specialization)
-        FROM Doctor d
-        WHERE d.hospital.id = :hospitalId
-        """)
-    Long countSpecializationsByHospitalId(@Param("hospitalId") Long hospitalId);
-
-    @Query("""
-        SELECT COUNT(d)
-        FROM Doctor d
-        WHERE d.hospital.id = :hospitalId
-        """)
-    Long countDoctorsByHospitalId(@Param("hospitalId") Long hospitalId);
 
     // Query to fetch active doctors
-    @Query("SELECT COUNT(d) FROM Doctor d WHERE d.isActive='Y'")
+    @Query("SELECT COUNT(d.id) FROM Doctor d")
     Long countActiveDoctors();
 
     /* Query used to fetch specialization distribution for dashboard pie chart
-     It counts number of doctors in each specialization */
+    It counts number of doctors in each specialization */
     @Query("""
-    SELECT new nimblix.in.HealthCareHub.response.SpecializationDistributionResponse(
-    s.name,
-    COUNT(d.id)
-    )
-    FROM Doctor d
-    JOIN d.specialization s
-    GROUP BY s.name
-    ORDER BY COUNT(d.id) DESC
-    """)
-    List<SpecializationDistributionResponse> getSpecializationDistribution();
+SELECT new nimblix.in.HealthCareHub.response.SpecializationDistributionResponse(
+s.name,
+COUNT(d.id)
+)
+FROM Doctor d
+JOIN d.specialization s
+GROUP BY s.name
+ORDER BY COUNT(d.id) DESC
+""")
+    List<SpecializationDistributionResponse> getSpecializationsDistribution();
 
     Optional<Doctor> findByPhone(String phone);
 
@@ -132,4 +114,61 @@ public interface DoctorRepository extends JpaRepository<Doctor,Long> {
             "WHERE da.doctor.id = :doctorId AND da.availableDate = :today AND da.isAvailable = true")
     boolean isDoctorAvailableToday(@Param("doctorId") Long doctorId,
                                    @Param("today") String today);
+
+
+    /* Query used to fetch doctors associated with a hospital */
+    @Query("""
+    SELECT new nimblix.in.HealthCareHub.response.DoctorSummaryResponse(
+        d.id,
+        d.name,
+        s.name,
+        d.experienceYears
+    )
+    FROM Doctor d
+    JOIN d.specialization s
+    WHERE d.hospital.id = :hospitalId
+    """)
+    List<DoctorSummaryResponse> findDoctorsByHospitalId(
+            @Param("hospitalId") Long hospitalId);
+
+
+
+    @Query("""
+        SELECT new nimblix.in.HealthCareHub.response.DoctorSearchResponse(
+            d.id,
+            d.name,
+            d.specialization.name,
+            d.experienceYears,
+            d.hospital.name
+        )
+        FROM Doctor d
+        WHERE LOWER(d.name) LIKE LOWER(CONCAT('%',:name,'%'))
+    """)
+    List<DoctorSearchResponse> searchDoctorsByName(@Param("name") String name);
+
+    @Query("SELECT COUNT(d) FROM Doctor d WHERE d.hospital.id = :hospitalId")
+    Long countDoctorsByHospitalId(@Param("hospitalId") Long hospitalId);
+
+    @Query("""
+        SELECT COUNT(DISTINCT d.specialization.id)
+        FROM Doctor d
+        WHERE d.hospital.id = :hospitalId
+    """)
+    Long countSpecializationsByHospitalId(@Param("hospitalId") Long hospitalId);
+
+
+    @Query("""
+SELECT new nimblix.in.HealthCareHub.response.DoctorFilterResponse(
+    d.id,
+    d.name,
+    d.specialization.name,
+    d.hospital.name,
+    d.experienceYears
+)
+FROM Doctor d
+WHERE LOWER(d.specialization.name) = LOWER(:specialization)
+""")
+    List<DoctorFilterResponse> findDoctorsBySpecialization(
+            @Param("specialization") String specialization);
+
 }

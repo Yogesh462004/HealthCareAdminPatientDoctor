@@ -1,5 +1,5 @@
 package nimblix.in.HealthCareHub.helper;
-
+/*
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -92,4 +92,4 @@ public class MailHelper {
     }
 }
 
-
+*/
