@@ -32,4 +32,9 @@ public interface DoctorService {
     DoctorScheduleResponse createDoctorSchedule(Long doctorId, DoctorScheduleRequest request);
     List<DoctorScheduleResponse> getDoctorSchedules(Long doctorId);
     DoctorScheduleResponse updateDoctorScheduleStatus(Long scheduleId, String status);
-}
+
+
+        ApiResponse<List<DoctorRegistrationResponse>> searchDoctorBySpecialization(String specialization);
+
+    }
+

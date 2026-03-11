@@ -7,7 +7,7 @@ import nimblix.in.HealthCareHub.utility.HealthCareUtil;
 import java.util.List;
 
 @Entity
-@Table(name = "specializations")
+@Table(name = "specialization")
 @Getter
 @Setter
 @NoArgsConstructor

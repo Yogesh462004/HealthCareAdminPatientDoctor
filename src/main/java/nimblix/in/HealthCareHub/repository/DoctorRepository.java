@@ -129,4 +129,5 @@ public interface DoctorRepository extends JpaRepository<Doctor,Long> {
             "WHERE da.doctor.id = :doctorId AND da.availableDate = :today AND da.isAvailable = true")
     boolean isDoctorAvailableToday(@Param("doctorId") Long doctorId,
                                    @Param("today") String today);
+
 }

@@ -6,7 +6,7 @@ import nimblix.in.HealthCareHub.constants.HealthCareConstants;
 import nimblix.in.HealthCareHub.utility.HealthCareUtil;
 
 @Entity
-@Table(name = "doctors")
+@Table(name = "doctor")
 @Getter
 @Setter
 @NoArgsConstructor

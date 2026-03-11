@@ -1,23 +1,23 @@
 package nimblix.in.HealthCareHub.response;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class DoctorRegistrationResponse {
 
     private Long doctorId;
     private String doctorName;
     private String doctorEmail;
     private Double consultationFee;
-    private String Specialization;
+    private String specialization;
     private String hospitalName;
     private Long hospitalId;
     private String qualification;
     private Long experienceYears;
     private String message;
-
 
 }
