@@ -1,5 +1,6 @@
 package nimblix.in.HealthCareHub.helper;
 
+/*
 import lombok.extern.slf4j.Slf4j;
 import nimblix.in.HealthCareHub.constants.HealthCareConstants;
 import nimblix.in.HealthCareHub.response.MultipleImageResponse;
@@ -80,3 +81,4 @@ public class UploadImageHelper {
     }
 
 }
+*/

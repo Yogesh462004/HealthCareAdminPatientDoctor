@@ -9,6 +9,11 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface DoctorScheduleRepository extends JpaRepository<DoctorSchedule, Long> {
+    boolean existsByDoctor_IdAndPatient_IdAndOperationDate(
+            Long doctorId,
+            Long patientId,
+            String operationDate
+    );
 
     @Query("""
         SELECT new nimblix.in.HealthCareHub.response.DoctorScheduleResponse(

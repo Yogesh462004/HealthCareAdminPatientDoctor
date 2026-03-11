@@ -1,11 +1,12 @@
 package nimblix.in.HealthCareHub.response;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
+
 @Data
-@Getter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class ApiResponse<T> {
@@ -13,5 +14,7 @@ public class ApiResponse<T> {
     private String status;
     private String message;
     private T data;
+
+
 
 }
