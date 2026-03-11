@@ -10,8 +10,12 @@ import lombok.Setter;
 public class ReviewResponse {
 
     private Long id;
+
     private String patientName;
+
     private Integer rating;
+
     private String comment;
+
     private String createdTime;
 }
